@@ -83,8 +83,8 @@ export default function FormsListPage() {
         <div className="max-w-7xl mx-auto px-8 py-6">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Carenotes Form Template Builder</h1>
-              <p className="text-gray-600 mt-1">Create and manage your Carenotes form templates</p>
+              <h1 className="text-3xl font-bold text-gray-900">CareNotes Form Builder</h1>
+              <p className="text-gray-600 mt-1">Create and manage your CareNotes forms</p>
             </div>
             <button 
               onClick={() => router.push('/builder')}

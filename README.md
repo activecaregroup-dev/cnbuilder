@@ -1,36 +1,131 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CNBuilder - CareNotes Form Builder
+
+A visual form builder application that generates CareNotes XML forms with an intuitive drag-and-drop interface.
+
+## Features
+
+- 🎨 Visual drag-and-drop form designer
+- 📝 12+ widget types (text inputs, dropdowns, radio buttons, date pickers, etc.)
+- 🔄 Drag widgets between rows with smart swapping
+- 💾 Save and load forms from Supabase database
+- 🔐 Password-protected access
+- 📱 Responsive design with Tailwind CSS
+- ⚙️ Customizable widget properties (validation, colspan, options, etc.)
+
+## Tech Stack
+
+- **Next.js 16.1.1** - React framework with App Router
+- **TypeScript** - Type-safe development
+- **Tailwind CSS v4** - Utility-first styling
+- **Supabase** - PostgreSQL database and authentication
+- **@dnd-kit** - Modern drag-and-drop library
+- **lucide-react** - Beautiful icon set
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
+- Node.js 18+ and npm
+- Supabase account and project
+
+### Installation
+
+1. Clone the repository:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone <your-repo-url>
+cd cnbuilder
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install dependencies:
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Create a `.env.local` file in the project root with your Supabase credentials:
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Set up your Supabase database table:
+```sql
+CREATE TABLE forms (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  description TEXT,
+  widgets JSONB NOT NULL DEFAULT '[]'::jsonb,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
 
-## Learn More
+5. Run the development server:
+```bash
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+6. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Access
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+**Password:** `carenotes2025`
 
-## Deploy on Vercel
+## Usage
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Enter the password to access the application
+2. Click "New Form" to create a form or "Edit" to modify existing ones
+3. Drag widgets from the left panel onto the form canvas
+4. Configure widget properties in the right panel
+5. Drag widgets between rows to reorganize or swap them
+6. Save your form to the database
+7. Export as XML (coming soon)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Widget Types
+
+- Text Single Line
+- Text Multi Line
+- Text with History
+- Date Picker
+- Time Picker
+- Number Input
+- Decimal Input
+- Checkbox
+- Radio Button List
+- Dropdown List
+- File Upload
+- Select Staff
+
+## Project Structure
+
+```
+cnbuilder/
+├── app/
+│   ├── page.tsx              # Forms list page
+│   └── builder/
+│       └── page.tsx          # Form builder page
+├── components/
+│   ├── FormCanvas.tsx        # Main canvas with sections/rows
+│   ├── WidgetLibrary.tsx     # Left sidebar with draggable widgets
+│   ├── PropertiesPanel.tsx   # Right sidebar for widget config
+│   └── PasswordProtect.tsx   # Authentication component
+├── lib/
+│   └── supabase.ts          # Supabase client and CRUD functions
+└── types/
+    └── form.ts              # TypeScript type definitions
+```
+
+## Development Notes
+
+- Field names are auto-generated and limited to 30 characters
+- Widget options are limited to 30 characters each
+- Forms are stored in Supabase with sections saved as JSONB in the `widgets` column
+- Authentication uses sessionStorage (expires on browser close)
+
+## License
+
+Proprietary - All rights reserved
+
+## Author
+
+Built with ❤️ for CareNotes
+
