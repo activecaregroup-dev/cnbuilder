@@ -34,7 +34,93 @@ function sanitizeFieldName(name: string): string {
     .join('');
 }
 
-function generateFieldXML(widget: FormWidget, groupName?: string): string {
+function calculateRowColspan(widgets: FormWidget[]): number {
+  // Group checkboxes by groupName
+  const groupedCheckboxes = new Map<string, FormWidget[]>();
+  const ungroupedWidgets: FormWidget[] = [];
+  
+  widgets.forEach(widget => {
+    if (widget.type === WidgetType.INSTRUCTION_NOTE || widget.type === WidgetType.ACTION_BUTTON) {
+      return; // Skip these
+    }
+    
+    if (widget.type === WidgetType.CHECKBOX && widget.properties.groupName) {
+      const group = widget.properties.groupName;
+      if (!groupedCheckboxes.has(group)) {
+        groupedCheckboxes.set(group, []);
+      }
+      groupedCheckboxes.get(group)!.push(widget);
+    } else {
+      ungroupedWidgets.push(widget);
+    }
+  });
+  
+  let total = 0;
+  
+  // Count ungrouped widgets (label + field each)
+  ungroupedWidgets.forEach(widget => {
+    const widgetColspan = widget.colspan || 1;
+    
+    if (!widget.properties.hideLabel) {
+      total += widgetColspan; // Label
+    }
+    total += widgetColspan; // Field
+  });
+  
+  // Count grouped checkboxes (one shared label + all checkbox fields)
+  groupedCheckboxes.forEach((checkboxes, groupName) => {
+    // Add one label for the group
+    if (checkboxes.length > 0 && !checkboxes[0].properties.hideLabel) {
+      total += (checkboxes[0].colspan || 1);
+    }
+    
+    // Add each checkbox field
+    checkboxes.forEach(checkbox => {
+      total += (checkbox.colspan || 1);
+    });
+  });
+  
+  return total;
+}
+
+function calculateSectionMaxColspan(section: FormSection): number {
+  let maxColspan = section.cols || 2; // Start with current section cols
+  
+  section.rows.forEach(row => {
+    const rowTotal = calculateRowColspan(row.widgets);
+    if (rowTotal > maxColspan) {
+      maxColspan = rowTotal;
+    }
+  });
+  
+  return maxColspan;
+}
+
+function calculateRowAdjustment(widgets: FormWidget[], sectionCols: number): { needsAdjustment: boolean; adjustmentAmount: number; lastWidgetId: string | null } {
+  const contentWidgets = widgets.filter(w => 
+    w.type !== WidgetType.INSTRUCTION_NOTE && w.type !== WidgetType.ACTION_BUTTON
+  );
+  
+  if (contentWidgets.length === 0) {
+    return { needsAdjustment: false, adjustmentAmount: 0, lastWidgetId: null };
+  }
+  
+  const currentTotal = calculateRowColspan(contentWidgets);
+  
+  if (currentTotal === sectionCols) {
+    return { needsAdjustment: false, adjustmentAmount: 0, lastWidgetId: null };
+  }
+  
+  if (currentTotal < sectionCols) {
+    const diff = sectionCols - currentTotal;
+    const lastWidget = contentWidgets[contentWidgets.length - 1];
+    return { needsAdjustment: true, adjustmentAmount: diff, lastWidgetId: lastWidget.id };
+  }
+  
+  return { needsAdjustment: false, adjustmentAmount: 0, lastWidgetId: null };
+}
+
+function generateFieldXML(widget: FormWidget, groupName?: string, colspanOverride?: number): string {
   const fieldName = groupName 
     ? `${groupName}_${widget.fieldName || sanitizeFieldName(widget.label)}`
     : widget.fieldName || sanitizeFieldName(widget.label);
@@ -83,20 +169,24 @@ function generateFieldXML(widget: FormWidget, groupName?: string): string {
       fieldType = 'TextSingleLine';
   }
   
+  // Use override if provided, otherwise use widget's colspan
+  const fieldColspan = colspanOverride !== undefined ? colspanOverride : (widget.colspan || 1);
+  
   // Build attributes
   const attrs: string[] = [];
   attrs.push(`name="${escapeXML(fieldName)}"`);
   attrs.push(`type="${fieldType}"`);
-  attrs.push(`colspan="${widget.colspan || 1}"`);
+  attrs.push(`colspan="${fieldColspan}"`); // Use the calculated colspan
   
   // Add mandatory if required (not for checkboxes)
   if (widget.properties.required && widget.type !== WidgetType.CHECKBOX) {
     attrs.push(`mandatory="true"`);
   }
   
-  // Add checkboxlabel for checkboxes
-  if (widget.type === WidgetType.CHECKBOX && widget.properties.checkboxLabel) {
-    attrs.push(`checkboxlabel="${escapeXML(widget.properties.checkboxLabel)}"`);
+  // Add checkboxlabel for checkboxes - ALWAYS add it
+  if (widget.type === WidgetType.CHECKBOX) {
+    const checkboxLabel = widget.properties.checkboxLabel || widget.label;
+    attrs.push(`checkboxlabel="${escapeXML(checkboxLabel)}"`);
   }
   
   // Add picklistname for radio/dropdown
@@ -116,6 +206,17 @@ function generateLabelXML(widget: FormWidget): string {
   const attrs: string[] = [];
   attrs.push(`caption="${escapeXML(widget.label)}"`);
   attrs.push(`fieldname="${escapeXML(fieldName)}"`);
+  attrs.push(`colspan="${widget.colspan || 1}"`);
+  
+  // Add CareNotes styling for labels
+  attrs.push(`cellstyle="background:#f7f7f7;border-bottom:1px solid #ccc;"`);
+  
+  return `    <label ${attrs.join(' ')} />`;
+}
+
+function generateLabelXMLWithoutFieldname(widget: FormWidget): string {
+  const attrs: string[] = [];
+  attrs.push(`caption="${escapeXML(widget.label)}"`);
   attrs.push(`colspan="${widget.colspan || 1}"`);
   
   // Add CareNotes styling for labels
@@ -153,16 +254,21 @@ ${items}
   return { xml, note };
 }
 
-function generateRowXML(row: FormRow, section: FormSection): { xml: string; picklists: string[]; notes: DeveloperNote[] } {
+function generateRowXML(row: FormRow, section: FormSection): { xml: string; picklists: string[]; notes: DeveloperNote[]; instructions: string[] } {
   const picklists: string[] = [];
   const notes: DeveloperNote[] = [];
   const rowParts: string[] = [];
+  const instructions: string[] = []; // Collect instructions separately
+  
+  // Calculate adjustment needed for this row
+  const adjustment = calculateRowAdjustment(row.widgets, section.cols || 2);
+  const workingWidgets = row.widgets; // Use original widgets, apply adjustment during field generation
   
   // Group checkboxes by groupName
   const groupedCheckboxes = new Map<string, FormWidget[]>();
   const ungroupedWidgets: FormWidget[] = [];
   
-  row.widgets.forEach(widget => {
+  workingWidgets.forEach(widget => {
     if (widget.type === WidgetType.CHECKBOX && widget.properties.groupName) {
       const group = widget.properties.groupName;
       if (!groupedCheckboxes.has(group)) {
@@ -176,12 +282,12 @@ function generateRowXML(row: FormRow, section: FormSection): { xml: string; pick
   
   // Process ungrouped widgets
   ungroupedWidgets.forEach(widget => {
-    // Skip instruction notes - they become comments
+    // Handle instruction notes - collect them separately
     if (widget.type === WidgetType.INSTRUCTION_NOTE) {
       const instruction = widget.properties.instructions || 'No instructions provided';
-      rowParts.push(`    <!-- DEVELOPER NOTE: ${escapeXML(instruction)} -->`);
+      instructions.push(instruction); // Store for later instead of adding to rowParts
       notes.push({ type: 'info', message: instruction });
-      return;
+      return; // Don't add to rowParts
     }
     
     // Skip action buttons - they're handled separately
@@ -194,8 +300,12 @@ function generateRowXML(row: FormRow, section: FormSection): { xml: string; pick
       rowParts.push(generateLabelXML(widget));
     }
     
-    // Add field
-    rowParts.push(generateFieldXML(widget));
+    // Add field with possible colspan adjustment
+    const fieldColspan = (adjustment.needsAdjustment && widget.id === adjustment.lastWidgetId)
+      ? (widget.colspan || 1) + adjustment.adjustmentAmount
+      : undefined;
+    
+    rowParts.push(generateFieldXML(widget, undefined, fieldColspan));
     
     // Generate picklist if needed
     if (widget.type === WidgetType.RADIO_BUTTON_LIST || widget.type === WidgetType.DROPDOWN_LIST) {
@@ -208,36 +318,103 @@ function generateRowXML(row: FormRow, section: FormSection): { xml: string; pick
   // Process grouped checkboxes (one row per group)
   groupedCheckboxes.forEach((checkboxes, groupName) => {
     // Add a single label for the group (use first checkbox's label)
+    // For grouped checkboxes, create label without fieldname to avoid CareNotes errors
     if (checkboxes.length > 0 && !checkboxes[0].properties.hideLabel) {
-      rowParts.push(generateLabelXML(checkboxes[0]));
+      rowParts.push(generateLabelXMLWithoutFieldname(checkboxes[0]));
     }
     
     // Add all checkboxes in the group
-    checkboxes.forEach(checkbox => {
-      rowParts.push(generateFieldXML(checkbox, groupName));
+    checkboxes.forEach((checkbox, index) => {
+      // Apply adjustment to last checkbox in group if needed
+      const isLastInGroup = index === checkboxes.length - 1;
+      const fieldColspan = (adjustment.needsAdjustment && checkbox.id === adjustment.lastWidgetId && isLastInGroup)
+        ? (checkbox.colspan || 1) + adjustment.adjustmentAmount
+        : undefined;
+      
+      rowParts.push(generateFieldXML(checkbox, groupName, fieldColspan));
     });
   });
   
+  // Only generate row XML if there's actual content (not just instructions)
+  const hasActualContent = rowParts.length > 0;
+
+  if (!hasActualContent) {
+    // Return empty xml but preserve instructions
+    return { xml: '', picklists, notes, instructions };
+  }
+
+  // Add instructions as comments at the start of the row if there are any
+  const instructionComments = instructions.map(inst => 
+    `    <!-- DEVELOPER NOTE: ${escapeXML(inst)} -->`
+  ).join('\n');
+
+  const rowContent = instructionComments 
+    ? `${instructionComments}\n${rowParts.join('\n')}`
+    : rowParts.join('\n');
+
   const xml = `  <row style="white-space:normal;">
-${rowParts.join('\n')}
+${rowContent}
   </row>`;
   
-  return { xml, picklists, notes };
+  return { xml, picklists, notes, instructions };
 }
 
 function generateSectionXML(section: FormSection): { xml: string; picklists: string[]; notes: DeveloperNote[] } {
   const allPicklists: string[] = [];
   const allNotes: DeveloperNote[] = [];
   const rowXMLs: string[] = [];
+  let pendingInstructions: string[] = [];
+  
+  // Calculate the maximum colspan needed across all rows
+  const maxColspanNeeded = calculateSectionMaxColspan(section);
+  const adjustedSectionCols = maxColspanNeeded;
+  
+  // Add note if we adjusted the section columns
+  if (adjustedSectionCols !== section.cols) {
+    allNotes.push({
+      type: 'info',
+      message: `Section "${section.title}" auto-adjusted from ${section.cols} to ${adjustedSectionCols} columns to fit content`
+    });
+  }
+  
+  // Create adjusted section object for row processing
+  const adjustedSection = { ...section, cols: adjustedSectionCols };
   
   section.rows.forEach(row => {
-    const { xml, picklists, notes } = generateRowXML(row, section);
-    rowXMLs.push(xml);
-    allPicklists.push(...picklists);
-    allNotes.push(...notes);
+    const { xml, picklists, notes, instructions } = generateRowXML(row, adjustedSection);
+    
+    // If this row has instructions but no content, store them for the next row
+    if (!xml && instructions.length > 0) {
+      pendingInstructions.push(...instructions);
+      allNotes.push(...notes);
+      return;
+    }
+    
+    // If we have pending instructions from previous empty rows, add them before this row
+    if (pendingInstructions.length > 0 && xml) {
+      const instructionComments = pendingInstructions.map(inst => 
+        `  <!-- DEVELOPER NOTE: ${escapeXML(inst)} -->`
+      ).join('\n');
+      rowXMLs.push(instructionComments);
+      pendingInstructions = [];
+    }
+    
+    if (xml) {
+      rowXMLs.push(xml);
+      allPicklists.push(...picklists);
+      allNotes.push(...notes);
+    }
   });
   
-  const xml = `<section title="${escapeXML(section.title)}" cols="${section.cols || 2}">
+  // If there are still pending instructions at the end of the section, add them
+  if (pendingInstructions.length > 0) {
+    const instructionComments = pendingInstructions.map(inst => 
+      `  <!-- DEVELOPER NOTE: ${escapeXML(inst)} -->`
+    ).join('\n');
+    rowXMLs.push(instructionComments);
+  }
+  
+  const xml = `<section title="${escapeXML(section.title)}" cols="${adjustedSectionCols}">
 ${rowXMLs.join('\n')}
 </section>`;
   
@@ -361,6 +538,12 @@ function generateFormComment(): string {
 export function generateCareNotesXML(options: XMLGeneratorOptions): { xml: string; notes: DeveloperNote[] } {
   const developerNotes: DeveloperNote[] = [];
   const xmlParts: string[] = [];
+  
+  // Add general colspan warning at start
+  developerNotes.push({
+    type: 'info',
+    message: 'Each row must have total colspan (labels + fields) equal to section cols. Labels and fields both count toward the total.'
+  });
   
   // Start form
   xmlParts.push(`<form name="${escapeXML(options.formName)}">`);
