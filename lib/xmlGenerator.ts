@@ -139,7 +139,7 @@ function generatePicklistXML(widget: FormWidget): { xml: string; note: Developer
     };
   }
   
-  const items = options.map(option => `    <item>${escapeXML(option)}</item>`).join('\n');
+  const items = options.map((option: string) => `    <item>${escapeXML(option)}</item>`).join('\n');
   
   const xml = `  <picklist name="${escapeXML(picklistName)}">
 ${items}
