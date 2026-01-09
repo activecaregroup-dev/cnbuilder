@@ -43,10 +43,13 @@ function generateFieldXML(widget: FormWidget, groupName?: string): string {
   
   // Map widget types to CareNotes field types
   switch (widget.type) {
-    case WidgetType.TEXT_INPUT:
+    case WidgetType.TEXT_SINGLE_LINE:
       fieldType = 'TextSingleLine';
       break;
-    case WidgetType.TEXT_AREA:
+    case WidgetType.TEXT_MULTI_LINE:
+      fieldType = 'TextMultiLine';
+      break;
+    case WidgetType.TEXT_WITH_HISTORY:
       fieldType = 'TextMultiLine';
       break;
     case WidgetType.DATE:
@@ -58,6 +61,9 @@ function generateFieldXML(widget: FormWidget, groupName?: string): string {
     case WidgetType.NUMBER:
       fieldType = 'Number';
       break;
+    case WidgetType.DECIMAL:
+      fieldType = 'Number';
+      break;
     case WidgetType.CHECKBOX:
       fieldType = 'CheckBox';
       break;
@@ -66,6 +72,12 @@ function generateFieldXML(widget: FormWidget, groupName?: string): string {
       break;
     case WidgetType.DROPDOWN_LIST:
       fieldType = 'DropDownList';
+      break;
+    case WidgetType.SELECT_STAFF:
+      fieldType = 'TextSingleLine';
+      break;
+    case WidgetType.FILE_UPLOAD:
+      fieldType = 'TextSingleLine';
       break;
     default:
       fieldType = 'TextSingleLine';
