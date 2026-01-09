@@ -9,6 +9,7 @@ import WidgetLibrary from '@/components/WidgetLibrary';
 import PropertiesPanel from '@/components/PropertiesPanel';
 import { Save, FileDown, FilePlus, ArrowLeft } from 'lucide-react';
 import { saveForm, loadForm } from '@/lib/supabase';
+import { generateCareNotesXML } from '@/lib/xmlGenerator';
 
 // Helper function to generate unique field names (max 30 chars)
 function generateFieldName(widgetType: WidgetType, label: string): string {
@@ -463,9 +464,26 @@ function FormBuilderPageContent() {
   };
 
   const handleExportXML = () => {
-    console.log('Export button clicked!');
-    console.log('Exporting XML for:', { name: formName, sections });
-    alert('XML export functionality coming soon!');
+    const { xml, notes } = generateCareNotesXML({
+      formName,
+      replannable: formSettings.replannable,
+      confirmable: formSettings.confirmable,
+      sections
+    });
+    
+    // Create a blob and download
+    const blob = new Blob([xml], { type: 'text/xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${formName.replace(/\s+/g, '_')}.xml`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    // Show success message
+    alert(`XML exported successfully!\n\nDeveloper notes: ${notes.length} items to review`);
   };
 
   const handleNewForm = () => {
