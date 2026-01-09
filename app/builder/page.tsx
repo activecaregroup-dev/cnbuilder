@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, MouseSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { FormSection, FormRow, FormWidget, WidgetType } from '@/types/form';
@@ -23,7 +23,7 @@ function generateFieldName(widgetType: WidgetType, label: string): string {
   return `${truncatedLabel}_${timestamp}_${random}`;
 }
 
-export default function FormBuilderPage() {
+function FormBuilderPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const formId = searchParams.get('formId');
@@ -33,14 +33,7 @@ export default function FormBuilderPage() {
   const [formName, setFormName] = useState("Untitled Form");
   const [currentFormId, setCurrentFormId] = useState<string | null>(formId);
   const [formSettings, setFormSettings] = useState({ replannable: false, confirmable: false });
-  const [sections, setSections] = useState<FormSection[]>([
-    {
-      id: crypto.randomUUID(),
-      title: "Section 1",
-      cols: 2,
-      rows: []
-    }
-  ]);
+  const [sections, setSections] = useState<FormSection[]>([]);
   
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
@@ -66,6 +59,18 @@ export default function FormBuilderPage() {
 
   useEffect(() => {
     setMounted(true);
+    
+    // Initialize with default section if none exist
+    if (sections.length === 0) {
+      setSections([
+        {
+          id: crypto.randomUUID(),
+          title: "Section 1",
+          cols: 2,
+          rows: []
+        }
+      ]);
+    }
     
     // Check authentication
     const auth = sessionStorage.getItem('cnbuilder_authenticated');
@@ -541,9 +546,32 @@ export default function FormBuilderPage() {
           value={formName}
           onChange={handleFormNameChange}
           onFocus={handleFormNameFocus}
-          className="text-xl font-bold border-b-2 border-gray-300 focus:border-blue-500 outline-none px-2 py-1 flex-1 max-w-2xl bg-transparent text-gray-900"
+          className="text-xl font-bold border-b-2 border-gray-300 focus:border-blue-500 outline-none px-2 py-1 flex-1 max-w-md bg-transparent text-gray-900"
           placeholder="Form Name"
         />
+        
+        {/* Replan and Confirmation Checkboxes */}
+        <div className="flex items-center gap-4 px-4 border-l border-gray-300">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={formSettings.replannable}
+              onChange={(e) => setFormSettings({ ...formSettings, replannable: e.target.checked })}
+              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <span className="text-sm font-medium text-gray-700">Replan</span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={formSettings.confirmable}
+              onChange={(e) => setFormSettings({ ...formSettings, confirmable: e.target.checked })}
+              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <span className="text-sm font-medium text-gray-700">Confirmation</span>
+          </label>
+        </div>
+
         <button
           type="button"
           onClick={handleNewForm}
@@ -624,5 +652,17 @@ export default function FormBuilderPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function FormBuilderPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-gray-400">Loading...</p>
+      </div>
+    }>
+      <FormBuilderPageContent />
+    </Suspense>
   );
 }
