@@ -508,19 +508,20 @@ function renderWidgetPreview(widget: FormWidget) {
               {widget.required && <span className="text-red-500 ml-1">*</span>}
             </label>
           )}
-          <select
-            disabled
-            className="w-56 border border-gray-300 rounded px-2 py-1 text-sm bg-white text-gray-700 cursor-not-allowed"
-          >
-            <option value="">Select...</option>
-            {dropdownOptions.length > 0 ? (
-              dropdownOptions.map((option: string, index: number) => (
-                <option key={index} value={option}>{option}</option>
-              ))
-            ) : (
-              <option value="">No options configured</option>
-            )}
-          </select>
+          <div className="flex-1">
+            <select
+              className="w-full border border-gray-300 rounded px-2 py-1 text-sm bg-white text-gray-700"
+            >
+              <option value="">Select...</option>
+              {dropdownOptions.length > 0 ? (
+                dropdownOptions.map((option: string, index: number) => (
+                  <option key={index} value={option}>{option}</option>
+                ))
+              ) : (
+                <option value="">No options configured</option>
+              )}
+            </select>
+          </div>
         </div>
       );
 

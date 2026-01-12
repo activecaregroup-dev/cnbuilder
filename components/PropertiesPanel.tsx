@@ -179,22 +179,22 @@ export default function PropertiesPanel({
       case WidgetType.RADIO_BUTTON_LIST:
         const options = properties.options || ['Option 1'];
         return (
-          <div className="space-y-2">
+          <div className="space-y-2 w-full">
             <label className="block text-sm font-medium text-gray-700">
               Options
             </label>
             {options.map((option: string, index: number) => (
-              <div key={index} className="flex gap-2">
-                <input
-                  type="text"
+              <div key={index} className="flex gap-2 items-start w-full">
+                <textarea
                   value={option}
                   onChange={(e) => {
                     const newOptions = [...options];
                     newOptions[index] = e.target.value;
                     updateProperty('options', newOptions);
                   }}
-                  maxLength={100}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#196774] text-gray-900 placeholder:text-gray-400"
+                  maxLength={180}
+                  rows={2}
+                  className="flex-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#196774] text-gray-900 placeholder:text-gray-400 resize-y min-h-[60px]"
                   placeholder={`Option ${index + 1}`}
                 />
                 <button
@@ -202,7 +202,7 @@ export default function PropertiesPanel({
                     const newOptions = options.filter((_: string, i: number) => i !== index);
                     updateProperty('options', newOptions);
                   }}
-                  className="px-3 py-2 text-[#EF6024] hover:bg-[#EF6024]/10 rounded-md transition-colors"
+                  className="px-2 py-2 text-[#EF6024] hover:bg-[#EF6024]/10 rounded-md transition-colors flex-shrink-0"
                   disabled={options.length === 1}
                 >
                   <Trash2 className="w-4 h-4" />
