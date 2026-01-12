@@ -247,7 +247,7 @@ function generatePicklistXML(widget: FormWidget): { xml: string; note: Developer
         .filter((opt: string) => opt && opt.trim()) // Remove empty/null options
         .map((opt: string) => [opt.trim().toLowerCase(), opt.trim()]) // Use lowercase as key, trimmed value as value
     ).values()
-  );
+  ) as string[];
   
   const items = uniqueOptions.map((option: string) => `    <item>${escapeXML(option)}</item>`).join('\n');
   
