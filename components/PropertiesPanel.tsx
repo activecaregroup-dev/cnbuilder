@@ -64,7 +64,7 @@ export default function PropertiesPanel({
     return (
       <button
         onClick={onToggle}
-        className="fixed right-0 top-1/2 -translate-y-1/2 bg-blue-600 text-white px-2 py-3 rounded-l-lg shadow-lg hover:bg-blue-700 z-20"
+        className="fixed right-0 top-1/2 -translate-y-1/2 bg-[#196774] text-white px-2 py-3 rounded-l-lg shadow-lg hover:bg-[#196774]/90 z-20"
         title="Show Properties Panel"
       >
         <span className="text-xs font-medium">›</span>
@@ -202,7 +202,7 @@ export default function PropertiesPanel({
                     const newOptions = options.filter((_: string, i: number) => i !== index);
                     updateProperty('options', newOptions);
                   }}
-                  className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                  className="px-3 py-2 text-[#EF6024] hover:bg-[#EF6024]/10 rounded-md transition-colors"
                   disabled={options.length === 1}
                 >
                   <Trash2 className="w-4 h-4" />
@@ -213,7 +213,7 @@ export default function PropertiesPanel({
               onClick={() => {
                 updateProperty('options', [...options, `Option ${options.length + 1}`]);
               }}
-              className="w-full px-3 py-2 text-sm text-blue-600 border border-blue-300 rounded-md hover:bg-blue-50 transition-colors"
+              className="w-full px-3 py-2 text-sm text-[#F0941F] border border-[#F0941F]/30 rounded-md hover:bg-[#F0941F]/10 transition-colors"
             >
               + Add Option
             </button>
@@ -315,8 +315,8 @@ export default function PropertiesPanel({
 
       case WidgetType.DATE:
         return (
-          <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
-            <p className="text-sm text-blue-700">
+          <div className="p-3 bg-[#196774]/10 border border-[#196774]/20 rounded-md">
+            <p className="text-sm text-[#196774]">
               Date picker will be available in the rendered form
             </p>
           </div>
@@ -381,8 +381,8 @@ export default function PropertiesPanel({
       </div>
 
       {/* Preview Notice */}
-      <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
-        <p className="text-xs text-blue-700">
+      <div className="mb-4 p-3 bg-[#196774]/10 border border-[#196774]/20 rounded-md">
+        <p className="text-xs text-[#196774]">
           <strong>Note:</strong> This is a designer preview. Widgets will be fully functional in the live CareNotes form.
         </p>
       </div>
@@ -397,7 +397,7 @@ export default function PropertiesPanel({
             {selectedWidget.type.replace(/_/g, ' ')}
           </div>
           {selectedWidget.type === WidgetType.CHECKBOX && (
-            <div className="bg-blue-50 border border-blue-200 rounded p-2 mt-2">
+            <div className="bg-[#196774]/10 border border-[#196774]/20 rounded p-2 mt-2">
               <p className="text-xs text-blue-800">
                 <strong>💡 Tip:</strong> To create a checkbox group (multiple checkboxes like "Morning", "Afternoon", "Evening"), 
                 add multiple checkbox widgets to the same row. Each checkbox needs its own unique field name.
@@ -473,7 +473,7 @@ export default function PropertiesPanel({
             maxLength={30}
             className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${
               isDuplicateFieldName(selectedWidget.fieldName)
-                ? 'border-red-500 focus:ring-red-500 bg-red-50'
+                ? 'border-[#EF6024] focus:ring-[#EF6024] bg-[#EF6024]/10'
                 : 'border-gray-300 focus:ring-blue-500'
             }`}
             placeholder="Auto-generated from label"
@@ -559,7 +559,7 @@ export default function PropertiesPanel({
                 onDelete();
               }
             }}
-            className="w-full px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
+            className="w-full px-4 py-2 bg-[#EF6024] text-white rounded-md hover:bg-[#EF6024]/90 transition-colors flex items-center justify-center gap-2"
           >
             <Trash2 className="w-4 h-4" />
             Delete Widget

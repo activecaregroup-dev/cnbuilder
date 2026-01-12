@@ -569,52 +569,58 @@ function FormBuilderPageContent() {
         />
         
         {/* Replan and Confirmation Checkboxes */}
-        <div className="flex items-center gap-4 px-4 border-l border-gray-300">
-          <label className="flex items-center gap-2 cursor-pointer">
+        <div className="flex items-center gap-6 px-6 py-2 border-l border-r border-gray-300 bg-[#196774]/5 rounded">
+          <label className="flex items-center gap-3 cursor-pointer group">
             <input
               type="checkbox"
               checked={formSettings.replannable}
               onChange={(e) => setFormSettings({ ...formSettings, replannable: e.target.checked })}
-              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              className="w-5 h-5 text-[#196774] border-gray-400 rounded focus:ring-2 focus:ring-[#196774]"
             />
-            <span className="text-sm font-medium text-gray-700">Replan</span>
+            <span className="text-sm font-semibold text-[#363432] group-hover:text-[#196774] transition-colors">Replan</span>
           </label>
-          <label className="flex items-center gap-2 cursor-pointer">
+          <label className="flex items-center gap-3 cursor-pointer group">
             <input
               type="checkbox"
               checked={formSettings.confirmable}
               onChange={(e) => setFormSettings({ ...formSettings, confirmable: e.target.checked })}
-              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              className="w-5 h-5 text-[#196774] border-gray-400 rounded focus:ring-2 focus:ring-[#196774]"
             />
-            <span className="text-sm font-medium text-gray-700">Confirmation</span>
+            <span className="text-sm font-semibold text-[#363432] group-hover:text-[#196774] transition-colors">Confirmation</span>
           </label>
         </div>
 
-        <button
-          type="button"
-          onClick={handleNewForm}
-          className="flex items-center gap-2 px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-        >
-          <FilePlus className="w-4 h-4" />
-          New Form
-        </button>
-        <button
-          type="button"
-          onClick={handleSaveForm}
-          disabled={saving}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Save className="w-4 h-4" />
-          {saving ? 'Saving...' : 'Save Form'}
-        </button>
-        <button
-          type="button"
-          onClick={handleExportXML}
-          className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-        >
-          <FileDown className="w-4 h-4" />
-          Export XML
-        </button>
+        {/* Spacer */}
+        <div className="flex-1"></div>
+
+        {/* Action Buttons - Right Aligned */}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleNewForm}
+            className="flex items-center gap-2 px-4 py-2 bg-[#F0941F] hover:bg-[#F0941F]/90 text-white rounded-md transition-colors"
+          >
+            <FilePlus className="w-4 h-4" />
+            New Form
+          </button>
+          <button
+            type="button"
+            onClick={handleSaveForm}
+            disabled={saving}
+            className="flex items-center gap-2 px-4 py-2 bg-[#196774] text-white rounded-md hover:bg-[#196774]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Save className="w-4 h-4" />
+            {saving ? 'Saving...' : 'Save Form'}
+          </button>
+          <button
+            type="button"
+            onClick={handleExportXML}
+            className="flex items-center gap-2 px-4 py-2 bg-[#90A19D] text-white rounded-md hover:bg-[#90A19D]/90 transition-colors"
+          >
+            <FileDown className="w-4 h-4" />
+            Export XML
+          </button>
+        </div>
       </div>
 
       {/* Three-Column Layout - Only render after mount to avoid hydration issues */}
@@ -658,7 +664,7 @@ function FormBuilderPageContent() {
           </div>
           <DragOverlay>
             {activeId ? (
-              <div className="bg-blue-100 border-2 border-blue-500 rounded px-3 py-2 shadow-lg">
+              <div className="bg-[#196774]/10 border-2 border-[#196774] rounded px-3 py-2 shadow-lg">
                 Dragging...
               </div>
             ) : null}

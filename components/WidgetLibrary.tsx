@@ -64,7 +64,7 @@ function DraggableWidget({ config }: DraggableWidgetProps) {
       {...attributes}
       className={`
         flex items-center gap-1.5 p-1.5 mb-1 bg-white border border-gray-300 rounded cursor-grab active:cursor-grabbing
-        hover:bg-blue-50 hover:border-blue-400
+        hover:bg-[#196774]/10 hover:border-[#196774]
         transition-all duration-150
         ${isDragging ? 'opacity-50' : 'opacity-100'}
       `}

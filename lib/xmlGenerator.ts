@@ -290,8 +290,21 @@ function generateRowXML(row: FormRow, section: FormSection): { xml: string; pick
       return; // Don't add to rowParts
     }
     
-    // Skip action buttons - they're handled separately
+    // Handle action buttons as button fields
     if (widget.type === WidgetType.ACTION_BUTTON) {
+      const actionDescription = widget.properties.actionDescription || 'No action description provided';
+      const buttonCaption = escapeXML(widget.label);
+      const sectionCols = section.cols || 2;
+      
+      // Generate button field with full section width
+      rowParts.push(`    <field type="Button" colspan="${sectionCols}" caption="${buttonCaption}" />`);
+      
+      // Add developer note about the action
+      notes.push({
+        type: 'action',
+        message: `Button "${widget.label}": ${actionDescription}`
+      });
+      
       return;
     }
     
@@ -568,24 +581,8 @@ export function generateCareNotesXML(options: XMLGeneratorOptions): { xml: strin
   xmlParts.push(viewPropsXML);
   developerNotes.push(viewPropsNote);
   
-  // Collect all action buttons from all sections/rows
-  const actionButtons: FormWidget[] = [];
-  options.sections.forEach(section => {
-    section.rows.forEach(row => {
-      row.widgets.forEach(widget => {
-        if (widget.type === WidgetType.ACTION_BUTTON) {
-          actionButtons.push(widget);
-        }
-      });
-    });
-  });
-  
-  // Generate action buttons
-  actionButtons.forEach(button => {
-    const { xml, note } = generateActionButtonXML(button);
-    xmlParts.push(xml);
-    developerNotes.push(note);
-  });
+  // Note: ACTION_BUTTON widgets are now generated as button fields within sections
+  // They are processed during row generation with type="Button"
   
   // Generate all sections
   const allPicklists: string[] = [];

@@ -78,21 +78,43 @@ export default function FormsListPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-8 py-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Carenotes Form Template Builder</h1>
-              <p className="text-gray-600 mt-1">Create and manage your Carenotes form templates</p>
+      {/* Header with branding */}
+      <div className="border-b border-gray-200 bg-white">
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          <div className="flex items-center justify-between">
+            {/* Left - ClaireNotes branding */}
+            <div className="flex items-center gap-4">
+              {/* C Logo with refined gradient */}
+              <div className="w-12 h-12 flex items-center justify-center bg-gradient-to-br from-[#F0941F] to-[#EF6024] rounded-lg shadow-sm">
+                <span className="text-3xl font-bold text-white">C</span>
+              </div>
+              
+              <div>
+                <h1 className="text-3xl font-bold text-[#363432]">
+                  Claire<span className="text-[#EF6024]">notes</span>
+                </h1>
+                <p className="text-[#90A19D] mt-1">Carenotes visual form builder tool</p>
+              </div>
             </div>
-            <button 
-              onClick={() => router.push('/builder')}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-sm"
-            >
-              <Plus className="w-5 h-5" />
-              New Form
-            </button>
+
+            {/* Right - New Form button and ACG logo */}
+            <div className="flex items-center gap-6">
+              <button 
+                onClick={() => router.push('/builder')}
+                className="flex items-center gap-2 bg-[#F0941F] hover:bg-[#F0941F]/90 text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-sm"
+              >
+                <Plus className="w-5 h-5" />
+                New Form
+              </button>
+              
+              <div className="hidden sm:block">
+                <img
+                  src="/acg-logo.png"
+                  alt="Active Care Group"
+                  className="h-12 object-contain"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -110,7 +132,7 @@ export default function FormsListPage() {
             <p className="text-gray-600 mb-6">Get started by creating your first form</p>
             <button 
               onClick={() => router.push('/builder')}
-              className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+              className="inline-flex items-center gap-2 bg-[#F0941F] hover:bg-[#F0941F]/90 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
             >
               <Plus className="w-5 h-5" />
               Create Your First Form
@@ -143,7 +165,7 @@ export default function FormsListPage() {
                   <div className="flex gap-2 ml-4">
                     <button 
                       onClick={() => router.push(`/builder?formId=${form.id}`)}
-                      className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                      className="flex items-center gap-2 bg-[#196774] hover:bg-[#196774]/90 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                       title="Edit form"
                     >
                       <Edit className="w-4 h-4" />
@@ -151,7 +173,7 @@ export default function FormsListPage() {
                     </button>
                     <button 
                       onClick={() => handleExportXML(form.id)}
-                      className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                      className="flex items-center gap-2 bg-[#F0941F] hover:bg-[#F0941F]/90 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                       title="Export as XML"
                     >
                       <FileDown className="w-4 h-4" />
@@ -159,7 +181,7 @@ export default function FormsListPage() {
                     </button>
                     <button 
                       onClick={() => handleDelete(form.id)}
-                      className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                      className="flex items-center gap-2 bg-[#EF6024] hover:bg-[#EF6024]/90 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                       title="Delete form"
                     >
                       <Trash2 className="w-4 h-4" />

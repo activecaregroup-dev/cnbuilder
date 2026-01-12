@@ -54,7 +54,7 @@ export default function PasswordProtect({ onUnlock }: PasswordProtectProps) {
 
           <button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors"
+            className="w-full bg-[#196774] hover:bg-[#196774]/90 text-white font-semibold py-3 px-4 rounded-lg transition-colors"
           >
             Unlock
           </button>
