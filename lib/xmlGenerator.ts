@@ -322,9 +322,12 @@ function generateRowXML(row: FormRow, section: FormSection): { xml: string; pick
       rowParts.push(`    <label caption="${escapeXML(widget.label)}" fieldname="${escapeXML(hiddenFieldName)}" colspan="${sectionCols}"${inlineStyle} />`);
       rowParts.push(`    <field name="${escapeXML(hiddenFieldName)}" type="Hidden" />`);
       
-      // Add additional instructions as comment if present
+      // Store additional instructions in notes instead of inline comments
       if (widget.properties.additionalInstructions) {
-        rowParts.push(`    <!-- ${escapeXML(widget.properties.additionalInstructions)} -->`);
+        notes.push({
+          type: 'info',
+          message: `${widget.label}: ${widget.properties.additionalInstructions}`
+        });
       }
       
       return;
@@ -351,8 +354,15 @@ function generateRowXML(row: FormRow, section: FormSection): { xml: string; pick
       return;
     }
     
-    // Add label if not hidden
-    if (!widget.properties.hideLabel) {
+    // Always add label - CareNotes requires label-field pairs
+    // Use empty caption if hideLabel is true
+    if (widget.properties.hideLabel) {
+      // Generate empty label for layout
+      const emptyLabelAttrs: string[] = [];
+      emptyLabelAttrs.push(`caption=""`);
+      emptyLabelAttrs.push(`colspan="${widget.colspan || 1}"`);
+      rowParts.push(`    <label ${emptyLabelAttrs.join(' ')} />`);
+    } else {
       rowParts.push(generateLabelXML(widget));
     }
     
@@ -363,9 +373,12 @@ function generateRowXML(row: FormRow, section: FormSection): { xml: string; pick
     
     rowParts.push(generateFieldXML(widget, undefined, fieldColspan));
     
-    // Add additional instructions as comment if present
+    // Store additional instructions in notes instead of inline comments
     if (widget.properties.additionalInstructions) {
-      rowParts.push(`    <!-- ${escapeXML(widget.label)}: ${escapeXML(widget.properties.additionalInstructions)} -->`);
+      notes.push({
+        type: 'info',
+        message: `${widget.label}: ${widget.properties.additionalInstructions}`
+      });
     }
     
     // Generate picklist if needed
@@ -378,10 +391,18 @@ function generateRowXML(row: FormRow, section: FormSection): { xml: string; pick
   
   // Process grouped checkboxes (one row per group)
   groupedCheckboxes.forEach((checkboxes, groupName) => {
-    // Add a single label for the group (use first checkbox's label)
-    // For grouped checkboxes, create label without fieldname to avoid CareNotes errors
-    if (checkboxes.length > 0 && !checkboxes[0].properties.hideLabel) {
-      rowParts.push(generateLabelXMLWithoutFieldname(checkboxes[0]));
+    // Always add a label for the group - CareNotes requires label-field pairs
+    if (checkboxes.length > 0) {
+      if (checkboxes[0].properties.hideLabel) {
+        // Generate empty label for layout
+        const emptyLabelAttrs: string[] = [];
+        emptyLabelAttrs.push(`caption=""`);
+        emptyLabelAttrs.push(`colspan="${checkboxes[0].colspan || 1}"`);
+        rowParts.push(`    <label ${emptyLabelAttrs.join(' ')} />`);
+      } else {
+        // For grouped checkboxes, create label without fieldname to avoid CareNotes errors
+        rowParts.push(generateLabelXMLWithoutFieldname(checkboxes[0]));
+      }
     }
     
     // Add all checkboxes in the group
@@ -394,9 +415,12 @@ function generateRowXML(row: FormRow, section: FormSection): { xml: string; pick
       
       rowParts.push(generateFieldXML(checkbox, groupName, fieldColspan));
       
-      // Add additional instructions as comment if present
+      // Store additional instructions in notes instead of inline comments
       if (checkbox.properties.additionalInstructions) {
-        rowParts.push(`    <!-- ${escapeXML(checkbox.label)}: ${escapeXML(checkbox.properties.additionalInstructions)} -->`);
+        notes.push({
+          type: 'info',
+          message: `${checkbox.label}: ${checkbox.properties.additionalInstructions}`
+        });
       }
     });
   });
