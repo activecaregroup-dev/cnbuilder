@@ -551,6 +551,23 @@ export default function PropertiesPanel({
           {renderTypeSpecificProperties()}
         </div>
 
+        {/* Additional Instructions - Available for all widgets */}
+        <div className="pt-4 border-t border-gray-200">
+          <label className="block text-sm font-semibold text-gray-700 mb-1">
+            Additional Instructions
+          </label>
+          <textarea
+            value={properties.additionalInstructions || ''}
+            onChange={(e) => updateProperty('additionalInstructions', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#196774] text-gray-900 placeholder:text-gray-400"
+            rows={4}
+            placeholder="Add any special instructions, validation rules, or notes for this widget..."
+          />
+          <p className="text-xs text-gray-600 mt-1">
+            Optional notes or special requirements for this field
+          </p>
+        </div>
+
         {/* Delete Button */}
         <div className="pt-6 border-t border-gray-200">
           <button
