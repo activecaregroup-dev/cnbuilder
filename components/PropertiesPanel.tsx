@@ -20,6 +20,7 @@ const getWidgetPrefix = (type: WidgetType): string => {
     [WidgetType.SELECT_STAFF]: 'sst',
     [WidgetType.ACTION_BUTTON]: 'btn',
     [WidgetType.INSTRUCTION_NOTE]: 'note',
+    [WidgetType.LABEL]: 'lbl',
   };
   return prefixMap[type] || 'wdg';
 };
