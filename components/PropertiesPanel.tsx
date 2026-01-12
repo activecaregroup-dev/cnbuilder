@@ -193,8 +193,8 @@ export default function PropertiesPanel({
                     newOptions[index] = e.target.value;
                     updateProperty('options', newOptions);
                   }}
-                  maxLength={30}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder:text-gray-400"
+                  maxLength={100}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#196774] text-gray-900 placeholder:text-gray-400"
                   placeholder={`Option ${index + 1}`}
                 />
                 <button
