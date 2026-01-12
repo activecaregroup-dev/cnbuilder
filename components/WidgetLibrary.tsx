@@ -17,6 +17,7 @@ import {
   User,
   Zap,
   StickyNote,
+  Tag,
 } from 'lucide-react';
 
 interface WidgetConfig {
@@ -26,6 +27,7 @@ interface WidgetConfig {
 }
 
 const widgetConfigs: WidgetConfig[] = [
+  { type: WidgetType.LABEL, label: 'Label', icon: Tag },
   { type: WidgetType.TEXT_SINGLE_LINE, label: 'Single Line Text', icon: Type },
   { type: WidgetType.TEXT_MULTI_LINE, label: 'Multi Line Text', icon: FileText },
   { type: WidgetType.TEXT_WITH_HISTORY, label: 'Text with History', icon: History },

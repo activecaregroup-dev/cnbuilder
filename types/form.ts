@@ -13,6 +13,7 @@ export enum WidgetType {
   SELECT_STAFF = "SELECT_STAFF",
   ACTION_BUTTON = "ACTION_BUTTON",
   INSTRUCTION_NOTE = "INSTRUCTION_NOTE",
+  LABEL = "LABEL",
 }
 
 export interface FormWidget {

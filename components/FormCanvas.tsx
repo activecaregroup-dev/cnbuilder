@@ -585,6 +585,19 @@ function renderWidgetPreview(widget: FormWidget) {
         </div>
       );
 
+    case WidgetType.LABEL:
+      return (
+        <div 
+          className="bg-white border border-gray-300 rounded p-2 w-full text-sm font-medium"
+          style={{
+            color: properties.textColor || '#000000',
+            fontWeight: properties.fontWeight || 'normal'
+          }}
+        >
+          {widget.label || 'Label Text'}
+        </div>
+      );
+
     default:
       return (
         <div className="flex items-center gap-0 w-full">

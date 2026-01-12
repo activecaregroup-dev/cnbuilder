@@ -360,6 +360,50 @@ export default function PropertiesPanel({
           </div>
         );
 
+      case WidgetType.LABEL:
+        return (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Text Color
+              </label>
+              <select
+                value={properties.textColor || '#000000'}
+                onChange={(e) => updateProperty('textColor', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#196774] text-gray-900"
+              >
+                <option value="#000000">Black (Default)</option>
+                <option value="#dc2626">Red (Warning)</option>
+                <option value="#F0941F">Orange (ACG)</option>
+                <option value="#196774">Teal (ACG)</option>
+                <option value="#16a34a">Green</option>
+                <option value="#2563eb">Blue</option>
+                <option value="#9333ea">Purple</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Font Weight
+              </label>
+              <select
+                value={properties.fontWeight || 'normal'}
+                onChange={(e) => updateProperty('fontWeight', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#196774] text-gray-900"
+              >
+                <option value="normal">Normal</option>
+                <option value="bold">Bold</option>
+              </select>
+            </div>
+
+            <div className="p-3 bg-[#196774]/10 border border-[#196774]/20 rounded-md">
+              <p className="text-sm text-[#196774]">
+                <strong>Label Widget:</strong> Displays as styled text in the form. Use the "Label" field above to set the text content.
+              </p>
+            </div>
+          </div>
+        );
+
       default:
         return null;
     }
@@ -461,37 +505,42 @@ export default function PropertiesPanel({
           </div>
         )}
 
-        {/* Field Name Input */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Field Name
-          </label>
-          <input
-            type="text"
-            value={selectedWidget.fieldName}
-            onChange={(e) => onUpdate({ fieldName: e.target.value })}
-            maxLength={30}
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${
-              isDuplicateFieldName(selectedWidget.fieldName)
-                ? 'border-[#EF6024] focus:ring-[#EF6024] bg-[#EF6024]/10'
-                : 'border-gray-300 focus:ring-blue-500'
-            }`}
-            placeholder="Auto-generated from label"
-          />
-          {isDuplicateFieldName(selectedWidget.fieldName) ? (
-            <p className="text-xs text-red-600 mt-1 font-medium">
-              ⚠ Duplicate field name - must be unique
-            </p>
-          ) : (
-            <p className="text-xs text-gray-500 mt-1">
-              Max 30 characters - Auto-generated but can be customized
-            </p>
-          )}
-        </div>
+        {/* Field Name Input - Hide for LABEL and special widgets */}
+        {selectedWidget.type !== WidgetType.ACTION_BUTTON && 
+         selectedWidget.type !== WidgetType.INSTRUCTION_NOTE &&
+         selectedWidget.type !== WidgetType.LABEL && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Field Name
+            </label>
+            <input
+              type="text"
+              value={selectedWidget.fieldName}
+              onChange={(e) => onUpdate({ fieldName: e.target.value })}
+              maxLength={30}
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${
+                isDuplicateFieldName(selectedWidget.fieldName)
+                  ? 'border-[#EF6024] focus:ring-[#EF6024] bg-[#EF6024]/10'
+                  : 'border-gray-300 focus:ring-blue-500'
+              }`}
+              placeholder="Auto-generated from label"
+            />
+            {isDuplicateFieldName(selectedWidget.fieldName) ? (
+              <p className="text-xs text-red-600 mt-1 font-medium">
+                ⚠ Duplicate field name - must be unique
+              </p>
+            ) : (
+              <p className="text-xs text-gray-500 mt-1">
+                Max 30 characters - Auto-generated but can be customized
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Required Checkbox - Hide for special action widgets */}
         {selectedWidget.type !== WidgetType.ACTION_BUTTON && 
-         selectedWidget.type !== WidgetType.INSTRUCTION_NOTE && (
+         selectedWidget.type !== WidgetType.INSTRUCTION_NOTE &&
+         selectedWidget.type !== WidgetType.LABEL && (
           <div className="flex items-center gap-2">
             <input
               type="checkbox"
@@ -508,7 +557,8 @@ export default function PropertiesPanel({
 
         {/* Hide Label Checkbox - Hide for special action widgets */}
         {selectedWidget.type !== WidgetType.ACTION_BUTTON && 
-         selectedWidget.type !== WidgetType.INSTRUCTION_NOTE && (
+         selectedWidget.type !== WidgetType.INSTRUCTION_NOTE &&
+         selectedWidget.type !== WidgetType.LABEL && (
           <div className="flex items-center gap-2">
             <input
               type="checkbox"

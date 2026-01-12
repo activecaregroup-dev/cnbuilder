@@ -40,7 +40,7 @@ function calculateRowColspan(widgets: FormWidget[]): number {
   const ungroupedWidgets: FormWidget[] = [];
   
   widgets.forEach(widget => {
-    if (widget.type === WidgetType.INSTRUCTION_NOTE || widget.type === WidgetType.ACTION_BUTTON) {
+    if (widget.type === WidgetType.INSTRUCTION_NOTE || widget.type === WidgetType.ACTION_BUTTON || widget.type === WidgetType.LABEL) {
       return; // Skip these
     }
     
@@ -98,7 +98,7 @@ function calculateSectionMaxColspan(section: FormSection): number {
 
 function calculateRowAdjustment(widgets: FormWidget[], sectionCols: number): { needsAdjustment: boolean; adjustmentAmount: number; lastWidgetId: string | null } {
   const contentWidgets = widgets.filter(w => 
-    w.type !== WidgetType.INSTRUCTION_NOTE && w.type !== WidgetType.ACTION_BUTTON
+    w.type !== WidgetType.INSTRUCTION_NOTE && w.type !== WidgetType.ACTION_BUTTON && w.type !== WidgetType.LABEL
   );
   
   if (contentWidgets.length === 0) {
@@ -240,7 +240,16 @@ function generatePicklistXML(widget: FormWidget): { xml: string; note: Developer
     };
   }
   
-  const items = options.map((option: string) => `    <item>${escapeXML(option)}</item>`).join('\n');
+  // Remove duplicates (case-insensitive) and trim whitespace
+  const uniqueOptions = Array.from(
+    new Map(
+      options
+        .filter((opt: string) => opt && opt.trim()) // Remove empty/null options
+        .map((opt: string) => [opt.trim().toLowerCase(), opt.trim()]) // Use lowercase as key, trimmed value as value
+    ).values()
+  );
+  
+  const items = uniqueOptions.map((option: string) => `    <item>${escapeXML(option)}</item>`).join('\n');
   
   const xml = `  <picklist name="${escapeXML(picklistName)}">
 ${items}
@@ -248,7 +257,7 @@ ${items}
   
   const note: DeveloperNote = {
     type: 'picklist',
-    message: `Create picklist "${picklistName}" with options: ${options.join(', ')}`
+    message: `Create picklist "${picklistName}" with options: ${uniqueOptions.join(', ')}`
   };
   
   return { xml, note };
@@ -290,19 +299,53 @@ function generateRowXML(row: FormRow, section: FormSection): { xml: string; pick
       return; // Don't add to rowParts
     }
     
-    // Handle action buttons as button fields
+    // Handle LABEL widgets - create label with hidden field
+    if (widget.type === WidgetType.LABEL) {
+      const sectionCols = section.cols || 2;
+      const hiddenFieldName = widget.fieldName || `lbl_${widget.id.substring(0, 8)}`;
+      
+      // Build inline style if color or font weight is specified
+      let inlineStyle = '';
+      if (widget.properties.textColor || widget.properties.fontWeight) {
+        const styles = [];
+        if (widget.properties.textColor && widget.properties.textColor !== '#000000') {
+          styles.push(`color: ${widget.properties.textColor}`);
+        }
+        if (widget.properties.fontWeight === 'bold') {
+          styles.push('font-weight: bold');
+        }
+        if (styles.length > 0) {
+          inlineStyle = ` style="${styles.join('; ')};"`;
+        }
+      }
+      
+      rowParts.push(`    <label caption="${escapeXML(widget.label)}" fieldname="${escapeXML(hiddenFieldName)}" colspan="${sectionCols}"${inlineStyle} />`);
+      rowParts.push(`    <field name="${escapeXML(hiddenFieldName)}" type="Hidden" />`);
+      
+      // Add additional instructions as comment if present
+      if (widget.properties.additionalInstructions) {
+        rowParts.push(`    <!-- ${escapeXML(widget.properties.additionalInstructions)} -->`);
+      }
+      
+      return;
+    }
+    
+    // Handle action buttons as <action> elements (NOT fields)
     if (widget.type === WidgetType.ACTION_BUTTON) {
       const actionDescription = widget.properties.actionDescription || 'No action description provided';
-      const buttonCaption = escapeXML(widget.label);
+      const buttonId = widget.fieldName || `btn_${widget.id.substring(0, 8)}`;
+      const buttonText = escapeXML(widget.label);
       const sectionCols = section.cols || 2;
       
-      // Generate button field with full section width
-      rowParts.push(`    <field type="Button" colspan="${sectionCols}" caption="${buttonCaption}" />`);
+      // Generate action element with event handler
+      rowParts.push(`    <action id="${escapeXML(buttonId)}" text="${buttonText}" type="Button" colspan="${sectionCols}">`);
+      rowParts.push(`      <event eventname="onclick" javascript="UserDefinedJavascript.${escapeXML(buttonId)}_Click();" />`);
+      rowParts.push(`    </action>`);
       
       // Add developer note about the action
       notes.push({
         type: 'action',
-        message: `Button "${widget.label}": ${actionDescription}`
+        message: `Button "${widget.label}" (${buttonId}): ${actionDescription}`
       });
       
       return;
