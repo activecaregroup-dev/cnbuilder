@@ -320,6 +320,11 @@ function generateRowXML(row: FormRow, section: FormSection): { xml: string; pick
     
     rowParts.push(generateFieldXML(widget, undefined, fieldColspan));
     
+    // Add additional instructions as comment if present
+    if (widget.properties.additionalInstructions) {
+      rowParts.push(`    <!-- ${escapeXML(widget.label)}: ${escapeXML(widget.properties.additionalInstructions)} -->`);
+    }
+    
     // Generate picklist if needed
     if (widget.type === WidgetType.RADIO_BUTTON_LIST || widget.type === WidgetType.DROPDOWN_LIST) {
       const { xml, note } = generatePicklistXML(widget);
@@ -345,6 +350,11 @@ function generateRowXML(row: FormRow, section: FormSection): { xml: string; pick
         : undefined;
       
       rowParts.push(generateFieldXML(checkbox, groupName, fieldColspan));
+      
+      // Add additional instructions as comment if present
+      if (checkbox.properties.additionalInstructions) {
+        rowParts.push(`    <!-- ${escapeXML(checkbox.label)}: ${escapeXML(checkbox.properties.additionalInstructions)} -->`);
+      }
     });
   });
   
