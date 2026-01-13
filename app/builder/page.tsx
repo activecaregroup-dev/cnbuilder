@@ -24,6 +24,8 @@ function generateFieldName(widgetType: WidgetType, label: string): string {
   return `${truncatedLabel}_${timestamp}_${random}`;
 }
 
+const PREVIEW_STORAGE_KEY = 'cnbuilder_preview';
+
 function FormBuilderPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -486,6 +488,22 @@ function FormBuilderPageContent() {
     alert(`XML exported successfully!\n\nDeveloper notes: ${notes.length} items to review`);
   };
 
+  const handlePreview = () => {
+    const payload = {
+      formName,
+      sections,
+      formSettings,
+    };
+
+    try {
+      localStorage.setItem(PREVIEW_STORAGE_KEY, JSON.stringify(payload));
+    } catch (err) {
+      console.error('Failed to store preview payload', err);
+    }
+
+    router.push('/preview');
+  };
+
   const handleNewForm = () => {
     console.log('New Form button clicked!');
     if (sections.length > 0 && sections.some(s => s.rows.length > 0)) {
@@ -611,6 +629,13 @@ function FormBuilderPageContent() {
           >
             <Save className="w-4 h-4" />
             {saving ? 'Saving...' : 'Save Form'}
+          </button>
+          <button
+            type="button"
+            onClick={handlePreview}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+          >
+            Preview
           </button>
           <button
             type="button"

@@ -10,6 +10,22 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  
+  /* CareNotes System Colors (not user-editable) */
+  --color-carenotes-blue: #1a5993;
+  --color-carenotes-alert: #ffe1e1;
+  
+  /* Form Colors (defined by ClaireNotes/users) */
+  --color-carenotes-label: #e7edf9;
+  --color-carenotes-confirmed: #46f600;
+  --color-carenotes-unconfirmed: #ff0000;
+  
+  /* ACG Brand Colors (for user-created elements) */
+  --color-acg-coral: #EF6024;
+  --color-acg-orange: #F0941F;
+  --color-acg-teal: #196774;
+  --color-acg-charcoal: #363432;
+  --color-acg-sage: #90A19D;
 }
 
 @media (prefers-color-scheme: dark) {

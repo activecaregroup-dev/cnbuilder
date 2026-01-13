@@ -88,7 +88,7 @@ function SectionDropZone({ section, isSelected, selectedRowId, selectedWidgetId,
       onClick={() => onSectionSelect(section.id)}
     >
       {/* Section Header Tab */}
-      <div className="inline-flex items-center gap-6 bg-blue-800 px-4 py-2 text-white font-semibold text-sm">
+      <div className="inline-flex items-center gap-6 bg-carenotes-blue px-4 py-2 text-white font-semibold text-sm">
         {isEditingTitle ? (
           <input
             type="text"
