@@ -493,6 +493,10 @@ function PreviewWidget({ widget }: { widget: FormWidget }) {
       );
 
     default:
-      return container(<p className="text-sm text-gray-600">Unsupported widget type.</p>);
+      return (
+        <div className="border border-carenotes-blue bg-white p-3">
+          <p className="text-sm text-gray-600">Unsupported widget type.</p>
+        </div>
+      );
   }
 }
