@@ -57,7 +57,7 @@ export default function PreviewPage() {
         <p>No preview data found. Open the builder and click Preview to generate a snapshot.</p>
         <button
           onClick={() => router.push('/')}
-          className="px-4 py-2 bg-white border border-gray-300 rounded-md hover:bg-gray-100 text-sm font-medium"
+          className="px-4 py-2 bg-white border border-gray-300 hover:bg-gray-100 text-sm font-medium"
         >
           Return to forms
         </button>
@@ -94,10 +94,13 @@ export default function PreviewPage() {
       {/* CareNotes UI starts here */}
       <CareNotesHeader />
 
+      {/* Patient Information Bar */}
+      <PatientInfoBar formName={payload.formName || 'Untitled Form'} />
+
       {/* Form content */}
       <div className="p-6">
         {!hasSections && (
-          <div className="border border-dashed border-gray-300 rounded-lg bg-white p-6 text-center text-gray-600">
+          <div className="border border-dashed border-gray-300-lg bg-white p-6 text-center text-gray-600">
             No sections to preview. Add widgets in the builder, then click Preview again.
           </div>
         )}
@@ -148,39 +151,128 @@ function CareNotesHeader() {
   );
 }
 
+function PatientInfoBar({ formName }: { formName: string }) {
+  return (
+    <div className="bg-gray-50 px-6 py-4 border-b border-gray-300">
+      {/* Row 1 - GP, CareNotes ID, Blank */}
+      <div className="grid grid-cols-3 gap-0">
+        <div className="flex items-center gap-0 border border-carenotes-blue bg-white">
+          <label className="bg-carenotes-label px-2 py-1 text-xs font-normal text-gray-900 w-32 shrink-0 border-r border-carenotes-blue">
+            GP
+          </label>
+          <div className="flex-1 px-2 py-1 text-sm text-gray-700">Dr. House</div>
+        </div>
+        <div className="flex items-center gap-0 border border-carenotes-blue bg-white">
+          <label className="bg-carenotes-label px-2 py-1 text-xs font-normal text-gray-900 w-32 shrink-0 border-r border-carenotes-blue">
+            CareNotes ID
+          </label>
+          <div className="flex-1 px-2 py-1 text-sm text-gray-700">11-29-95</div>
+        </div>
+        <div className="flex items-center gap-0 border border-carenotes-blue bg-white">
+          <label className="bg-carenotes-label px-2 py-1 text-xs font-normal text-gray-900 w-32 shrink-0 border-r border-carenotes-blue">
+            &nbsp;
+          </label>
+          <div className="flex-1 px-2 py-1 text-sm text-gray-700"></div>
+        </div>
+      </div>
+
+      {/* Row 2 - Consultant, Gender, Care Type */}
+      <div className="grid grid-cols-3 gap-0">
+        <div className="flex items-center gap-0 border border-carenotes-blue bg-white">
+          <label className="bg-carenotes-label px-2 py-1 text-xs font-normal text-gray-900 w-32 shrink-0 border-r border-carenotes-blue">
+            Consultant
+          </label>
+          <div className="flex-1 px-2 py-1 text-sm text-gray-700"></div>
+        </div>
+        <div className="flex items-center gap-0 border border-carenotes-blue bg-white">
+          <label className="bg-carenotes-label px-2 py-1 text-xs font-normal text-gray-900 w-32 shrink-0 border-r border-carenotes-blue">
+            Gender
+          </label>
+          <div className="flex-1 px-2 py-1 text-sm text-gray-700">Male</div>
+        </div>
+        <div className="flex items-center gap-0 border border-carenotes-blue bg-white">
+          <label className="bg-carenotes-label px-2 py-1 text-xs font-normal text-gray-900 w-32 shrink-0 border-r border-carenotes-blue">
+            Care Type
+          </label>
+          <div className="flex-1 px-2 py-1 text-sm text-gray-700">Non-CPA</div>
+        </div>
+      </div>
+
+      {/* Row 3 - Primary Worker, Legal Status, Form Name */}
+      <div className="grid grid-cols-3 gap-0">
+        <div className="flex items-center gap-0 border border-carenotes-blue bg-white">
+          <label className="bg-carenotes-label px-2 py-1 text-xs font-normal text-gray-900 w-32 shrink-0 border-r border-carenotes-blue">
+            Primary Worker
+          </label>
+          <div className="flex-1 px-2 py-1 text-sm text-gray-700"></div>
+        </div>
+        <div className="flex items-center gap-0 border border-carenotes-blue bg-white">
+          <label className="bg-carenotes-label px-2 py-1 text-xs font-normal text-gray-900 w-32 shrink-0 border-r border-carenotes-blue">
+            Legal Status
+          </label>
+          <div className="flex-1 px-2 py-1 text-sm text-gray-700"></div>
+        </div>
+        <div className="flex items-center justify-center bg-carenotes-blue border border-carenotes-blue px-2 py-1">
+          <span className="text-sm font-semibold text-white">{formName}</span>
+        </div>
+      </div>
+
+      {/* Row 4 - Alert (full width) */}
+      <div className="flex items-center gap-0 border border-carenotes-blue bg-white">
+        <label className="bg-carenotes-alert px-2 py-1 text-xs font-normal text-gray-900 w-32 shrink-0 border-r border-carenotes-blue">
+          Alert
+        </label>
+        <div className="flex-1 px-2 py-1 text-xs text-red-600">
+          07/10/25: Physical Health - Allergic to weasels
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function PreviewSection({ section }: { section: FormSection }) {
   const columns = Math.max(1, section.cols || 1);
+  const truncatedTitle = (section.title || 'Untitled section').substring(0, 60);
 
   return (
-    <div className="border border-gray-200 shadow-sm rounded bg-white overflow-hidden">
-      <div className="bg-carenotes-blue px-3 py-2 text-white flex items-center justify-between">
-        <span className="text-sm font-semibold">{section.title || 'Untitled section'}</span>
-        <span className="text-xs opacity-80">{columns} cols</span>
+    <div>
+      {/* Section header tab - fixed width */}
+      <div className="bg-carenotes-blue px-3 py-1.5 text-white inline-block text-center" style={{ width: '300px' }}>
+        <span className="text-sm font-semibold">{truncatedTitle}</span>
       </div>
-      {section.rows.length === 0 ? (
-        <div className="p-4 text-sm text-gray-500">No rows in this section.</div>
-      ) : (
-        <div className="divide-y divide-gray-200">
-          {section.rows.map((row) => (
-            <div key={row.id} className="p-3">
-              <div
-                className="grid gap-2"
-                style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
-              >
-                {row.widgets.map((widget) => (
+      
+      {/* Section content with border */}
+      <div className="border border-carenotes-blue shadow-sm bg-white overflow-hidden">
+        {section.rows.length === 0 ? (
+          <div className="p-4 text-sm text-gray-500">No rows in this section.</div>
+        ) : (
+          <div className="divide-y divide-gray-200">
+            {section.rows.map((row) => {
+              // Filter out hidden instruction notes
+              const visibleWidgets = row.widgets.filter(w => w.type !== WidgetType.INSTRUCTION_NOTE);
+              
+              return (
+                <div key={row.id} className="p-3">
                   <div
-                    key={widget.id}
-                    className="col-span-1"
-                    style={{ gridColumn: `span ${Math.min(columns, Math.max(1, widget.colspan || 1))}` }}
+                    className="grid gap-2"
+                    style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
                   >
-                    <PreviewWidget widget={widget} />
+                    {visibleWidgets.map((widget) => (
+                      <div
+                        key={widget.id}
+                        className="col-span-1"
+                        style={{ gridColumn: `span ${Math.min(columns, Math.max(1, widget.colspan || 1))}` }}
+                      >
+                        <PreviewWidget widget={widget} />
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -190,125 +282,189 @@ function PreviewWidget({ widget }: { widget: FormWidget }) {
   const showLabel = !properties.hideLabel && ![WidgetType.LABEL, WidgetType.ACTION_BUTTON, WidgetType.INSTRUCTION_NOTE].includes(widget.type);
   const label = widget.label || widget.type.replace(/_/g, ' ');
 
-  const container = (content: React.ReactNode) => (
-    <div className="border border-gray-200 rounded bg-white shadow-sm">
-      {showLabel && (
-        <div className="bg-gray-100 px-3 py-2 border-b border-gray-200 text-sm font-semibold text-gray-700">
-          {label}
-          {widget.required && <span className="text-red-500 ml-1">*</span>}
-        </div>
-      )}
-      <div className="p-3 bg-gray-50">{content}</div>
-    </div>
-  );
-
   switch (widget.type) {
     case WidgetType.TEXT_SINGLE_LINE:
-      return container(
-        <input
-          type="text"
-          disabled
-          placeholder={properties.placeholder || 'Read-only'}
-          className="w-full px-2 py-2 border border-gray-300 rounded bg-white text-gray-500"
-        />
+      return (
+        <div className="flex items-center gap-0 w-full border border-carenotes-blue bg-white">
+          {showLabel && (
+            <label className="bg-carenotes-label px-2 py-1 text-xs font-normal text-gray-900 w-32 shrink-0 border-r border-carenotes-blue">
+              {label}
+              {widget.required && <span className="text-red-500 ml-1">*</span>}
+            </label>
+          )}
+          <input
+            type="text"
+            disabled
+            placeholder={properties.placeholder || ''}
+            className="flex-1 h-7 m-0 px-2 py-1 text-sm border-0 bg-white text-gray-400 cursor-not-allowed"
+          />
+        </div>
       );
 
     case WidgetType.TEXT_MULTI_LINE:
     case WidgetType.TEXT_WITH_HISTORY:
-      return container(
-        <textarea
-          disabled
-          rows={properties.rows || 3}
-          placeholder={widget.type === WidgetType.TEXT_WITH_HISTORY ? 'History is read-only' : 'Read-only'}
-          className="w-full px-2 py-2 border border-gray-300 rounded bg-white text-gray-500 resize-none"
-        />
+      return (
+        <div className="flex gap-0 w-full border border-carenotes-blue bg-white">
+          {showLabel && (
+            <label className="bg-carenotes-label px-2 py-1 text-xs font-normal text-gray-900 w-32 shrink-0 border-r border-carenotes-blue">
+              {label}
+              {widget.required && <span className="text-red-500 ml-1">*</span>}
+            </label>
+          )}
+          <textarea
+            disabled
+            rows={properties.rows || 3}
+            className="flex-1 h-20 m-0 px-2 py-1 text-sm border-0 bg-white text-gray-400 cursor-not-allowed resize-none"
+          />
+        </div>
       );
 
     case WidgetType.DATE:
-      return container(
-        <input type="date" disabled className="w-full px-2 py-2 border border-gray-300 rounded bg-white text-gray-500" />
+      return (
+        <div className="flex items-center gap-0 w-full border border-carenotes-blue bg-white">
+          {showLabel && (
+            <label className="bg-carenotes-label px-2 py-1 text-xs font-normal text-gray-900 w-32 shrink-0 border-r border-carenotes-blue">
+              {label}
+              {widget.required && <span className="text-red-500 ml-1">*</span>}
+            </label>
+          )}
+          <input type="date" disabled className="flex-1 h-7 m-0 px-2 py-1 text-sm border-0 bg-white text-gray-400 cursor-not-allowed" />
+        </div>
       );
 
     case WidgetType.TIME:
-      return container(
-        <input type="time" disabled className="w-full px-2 py-2 border border-gray-300 rounded bg-white text-gray-500" />
+      return (
+        <div className="flex items-center gap-0 w-full border border-carenotes-blue bg-white">
+          {showLabel && (
+            <label className="bg-carenotes-label px-2 py-1 text-xs font-normal text-gray-900 w-32 shrink-0 border-r border-carenotes-blue">
+              {label}
+              {widget.required && <span className="text-red-500 ml-1">*</span>}
+            </label>
+          )}
+          <input type="time" disabled className="flex-1 h-7 m-0 px-2 py-1 text-sm border-0 bg-white text-gray-400 cursor-not-allowed" />
+        </div>
       );
 
     case WidgetType.NUMBER:
     case WidgetType.DECIMAL:
-      return container(
-        <input
-          type="number"
-          disabled
-          min={properties.min}
-          max={properties.max}
-          step={widget.type === WidgetType.DECIMAL ? '0.01' : '1'}
-          className="w-full px-2 py-2 border border-gray-300 rounded bg-white text-gray-500"
-        />
+      return (
+        <div className="flex items-center gap-0 w-full border border-carenotes-blue bg-white">
+          {showLabel && (
+            <label className="bg-carenotes-label px-2 py-1 text-xs font-normal text-gray-900 w-32 shrink-0 border-r border-carenotes-blue">
+              {label}
+              {widget.required && <span className="text-red-500 ml-1">*</span>}
+            </label>
+          )}
+          <input
+            type="number"
+            disabled
+            min={properties.min}
+            max={properties.max}
+            step={widget.type === WidgetType.DECIMAL ? '0.01' : '1'}
+            className="flex-1 h-7 m-0 px-2 py-1 text-sm border-0 bg-white text-gray-400 cursor-not-allowed"
+          />
+        </div>
       );
 
     case WidgetType.CHECKBOX: {
       const checkboxLabel = properties.checkboxLabel || label;
-      return container(
-        <label className="flex items-center gap-2 text-sm text-gray-700">
-          <input type="checkbox" disabled className="w-4 h-4 border-gray-300 rounded" />
-          <span>
-            {checkboxLabel}
-            {properties.groupName && (
-              <span className="ml-2 text-xs text-gray-500">({properties.groupName})</span>
-            )}
-          </span>
-        </label>
+      return (
+        <div className="flex items-center gap-0 w-full border border-carenotes-blue bg-white">
+          {showLabel && (
+            <label className="bg-carenotes-label px-2 py-1 text-xs font-normal text-gray-900 w-32 shrink-0 border-r border-carenotes-blue">
+              {label}
+              {widget.required && <span className="text-red-500 ml-1">*</span>}
+            </label>
+          )}
+          <div className="flex-1 px-2 py-1">
+            <label className="flex items-center gap-1.5 cursor-not-allowed">
+              <input type="checkbox" disabled className="w-4 h-4 border-gray-300 cursor-not-allowed" />
+              <span className="text-sm text-gray-700">{checkboxLabel}</span>
+            </label>
+          </div>
+        </div>
       );
     }
 
     case WidgetType.RADIO_BUTTON_LIST: {
       const options: string[] = properties.options || [];
-      return container(
-        options.length ? (
-          <div className="flex flex-wrap gap-4">
-            {options.map((opt, idx) => (
-              <label key={idx} className="flex items-center gap-2 text-sm text-gray-700">
-                <input type="radio" disabled className="w-4 h-4" />
-                <span>{opt}</span>
-              </label>
-            ))}
+      return (
+        <div className="flex gap-0 w-full border border-carenotes-blue bg-white">
+          {showLabel && (
+            <label className="bg-carenotes-label px-2 py-1 text-xs font-normal text-gray-900 w-32 shrink-0 border-r border-carenotes-blue">
+              {label}
+              {widget.required && <span className="text-red-500 ml-1">*</span>}
+            </label>
+          )}
+          <div className="flex-1 flex items-center gap-4 px-2 py-1">
+            {options.length > 0 ? (
+              options.map((opt, idx) => (
+                <div key={idx} className="flex items-center gap-1.5">
+                  <input type="radio" disabled className="w-4 h-4 cursor-not-allowed" />
+                  <span className="text-sm text-gray-700">{opt}</span>
+                </div>
+              ))
+            ) : (
+              <span className="text-sm text-gray-400 italic">No options</span>
+            )}
           </div>
-        ) : (
-          <p className="text-sm text-gray-500">No options configured.</p>
-        )
+        </div>
       );
     }
 
     case WidgetType.DROPDOWN_LIST: {
       const options: string[] = properties.options || [];
-      return container(
-        <select disabled className="w-full px-2 py-2 border border-gray-300 rounded bg-white text-gray-700">
-          <option value="">Select...</option>
-          {options.map((opt, idx) => (
-            <option key={idx} value={opt}>
-              {opt}
-            </option>
-          ))}
-        </select>
+      return (
+        <div className="flex items-center gap-0 w-full border border-carenotes-blue bg-white">
+          {showLabel && (
+            <label className="bg-carenotes-label px-2 py-1 text-xs font-normal text-gray-900 w-32 shrink-0 border-r border-carenotes-blue">
+              {label}
+              {widget.required && <span className="text-red-500 ml-1">*</span>}
+            </label>
+          )}
+          <select disabled className="flex-1 h-7 m-0 px-2 py-1 text-sm border-0 bg-white text-gray-400 cursor-not-allowed">
+            <option value="">Select...</option>
+            {options.map((opt, idx) => (
+              <option key={idx} value={opt}>
+                {opt}
+              </option>
+            ))}
+          </select>
+        </div>
       );
     }
 
     case WidgetType.FILE_UPLOAD:
-      return container(
-        <div className="px-2 py-2 border border-dashed border-gray-300 rounded bg-white text-sm text-gray-500">
-          File upload (read-only preview)
+      return (
+        <div className="flex items-center gap-0 w-full border border-carenotes-blue bg-white">
+          {showLabel && (
+            <label className="bg-carenotes-label px-2 py-1 text-xs font-normal text-gray-900 w-32 shrink-0 border-r border-carenotes-blue">
+              {label}
+              {widget.required && <span className="text-red-500 ml-1">*</span>}
+            </label>
+          )}
+          <div className="flex-1 px-2 py-1 border-dashed text-sm text-gray-400">
+            File upload (read-only)
+          </div>
         </div>
       );
 
     case WidgetType.SELECT_STAFF:
-      return container(
-        <input
-          type="text"
-          disabled
-          placeholder="Staff selector (read-only)"
-          className="w-full px-2 py-2 border border-gray-300 rounded bg-white text-gray-500"
-        />
+      return (
+        <div className="flex items-center gap-0 w-full border border-carenotes-blue bg-white">
+          {showLabel && (
+            <label className="bg-carenotes-label px-2 py-1 text-xs font-normal text-gray-900 w-32 shrink-0 border-r border-carenotes-blue">
+              {label}
+              {widget.required && <span className="text-red-500 ml-1">*</span>}
+            </label>
+          )}
+          <input
+            type="text"
+            disabled
+            placeholder="Staff selector (read-only)"
+            className="flex-1 h-7 m-0 px-2 py-1 text-sm border-0 bg-white text-gray-400 cursor-not-allowed"
+          />
+        </div>
       );
 
     case WidgetType.ACTION_BUTTON:
@@ -316,7 +472,7 @@ function PreviewWidget({ widget }: { widget: FormWidget }) {
         <div className="flex items-center justify-center">
           <button
             disabled
-            className="w-full px-4 py-2 bg-[#F0941F] border-2 border-[#EF6024] text-white rounded text-sm font-semibold cursor-not-allowed"
+            className="w-full px-4 py-2 bg-[#F0941F] border-2 border-[#EF6024] text-white text-sm font-semibold cursor-not-allowed"
           >
             {label}
           </button>
@@ -324,17 +480,12 @@ function PreviewWidget({ widget }: { widget: FormWidget }) {
       );
 
     case WidgetType.INSTRUCTION_NOTE:
-      return (
-        <div className="bg-yellow-50 border border-yellow-400 rounded p-3 text-sm text-yellow-900">
-          <div className="font-semibold mb-1">Developer Instructions</div>
-          <div className="whitespace-pre-wrap">{properties.instructions || 'No instructions provided.'}</div>
-        </div>
-      );
+      return null;
 
     case WidgetType.LABEL:
       return (
         <div
-          className="px-3 py-2 text-sm font-semibold rounded border border-gray-200"
+          className="px-3 py-2 text-sm font-semibold border border-carenotes-blue"
           style={{ color: properties.textColor || '#000000', fontWeight: properties.fontWeight || 'normal' }}
         >
           {label}
