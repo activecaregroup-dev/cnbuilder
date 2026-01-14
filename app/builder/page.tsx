@@ -651,10 +651,10 @@ function FormBuilderPageContent() {
       {/* Three-Column Layout - Only render after mount to avoid hydration issues */}
       {mounted ? (
         <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd} sensors={sensors}>
-          <div className="flex flex-1 overflow-hidden">
+          <div className="flex flex-1 overflow-hidden min-h-0">
             <WidgetLibrary />
             
-            <div className={`flex-1 ml-48 ${propertiesPanelVisible ? 'mr-80' : 'mr-0'}`}>
+            <div className={`flex-1 ml-48 ${propertiesPanelVisible ? 'mr-80' : 'mr-0'} flex flex-col min-h-0`}>
               <FormCanvas
                 sections={sections}
                 onAddSection={handleAddSection}
