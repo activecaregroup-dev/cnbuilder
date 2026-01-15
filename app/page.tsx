@@ -96,8 +96,8 @@ export default function FormsListPage() {
       URL.revokeObjectURL(url);
 
       // Show developer notes if any
-      if (result.developerNotes.length > 0) {
-        alert(`XML exported successfully!\n\nDeveloper Notes (${result.developerNotes.length}):\n${result.developerNotes.slice(0, 5).join('\n')}${result.developerNotes.length > 5 ? '\n...(see XML for full list)' : ''}`);
+      if (result.notes.length > 0) {
+        alert(`XML exported successfully!\n\nDeveloper Notes (${result.notes.length}):\n${result.notes.map(n => n.message).slice(0, 5).join('\n')}${result.notes.length > 5 ? '\n...(see XML for full list)' : ''}`);
       }
     } catch (err) {
       alert('Failed to export XML');
