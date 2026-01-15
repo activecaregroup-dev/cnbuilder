@@ -8,7 +8,7 @@ import FormCanvas from '@/components/FormCanvas';
 import WidgetLibrary from '@/components/WidgetLibrary';
 import PropertiesPanel from '@/components/PropertiesPanel';
 import { Save, FileDown, FilePlus, ArrowLeft } from 'lucide-react';
-import { saveForm, loadForm } from '@/lib/supabase';
+import { saveForm, loadForm, getCurrentUser } from '@/lib/supabase';
 import { generateCareNotesXML } from '@/lib/xmlGenerator';
 
 // Helper function to generate unique field names (max 30 chars)
@@ -37,6 +37,7 @@ function FormBuilderPageContent() {
   const [currentFormId, setCurrentFormId] = useState<string | null>(formId);
   const [formSettings, setFormSettings] = useState({ replannable: false, confirmable: false });
   const [sections, setSections] = useState<FormSection[]>([]);
+  const [user, setUser] = useState<any>(null);
   
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
@@ -76,18 +77,23 @@ function FormBuilderPageContent() {
     }
     
     // Check authentication
-    const auth = sessionStorage.getItem('cnbuilder_authenticated');
-    if (auth !== 'true') {
-      router.push('/');
+    checkAuth();
+  }, [formId, router]);
+
+  const checkAuth = async () => {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      router.push('/login');
       return;
     }
+    setUser(currentUser);
     setIsAuthenticated(true);
 
     // Load form if formId is provided
     if (formId) {
       loadExistingForm(formId);
     }
-  }, [formId, router]);
+  };
 
   const loadExistingForm = async (id: string) => {
     setLoading(true);

@@ -4,7 +4,7 @@
 
 - **Data model**: Form structure is Section → Row → Widget per [types/form.ts](types/form.ts); each Section has `cols` controlling the grid. Forms persist to Supabase table `forms` (columns id, name, description, widgets JSONB, updated_at) via [lib/supabase.ts](lib/supabase.ts); `widgets` column stores the `sections` array verbatim.
 
-- **Auth gate**: [components/PasswordProtect.tsx](components/PasswordProtect.tsx) enforces a single password (`carenotes2025`) and sets `sessionStorage.cnbuilder_authenticated`; both pages redirect/guard off this flag.
+- **Auth gate**: Supabase Authentication with email/password; login page at [app/login/page.tsx](app/login/page.tsx). Auth functions in [lib/supabase.ts](lib/supabase.ts) include `signUp`, `signIn`, `signOut`, and `getCurrentUser`. All pages check authentication and redirect to `/login` if not authenticated. Forms track creator with `created_by`, `author_email`, and `author_name` columns.
 
 - **Dev workflow**: `npm run dev` to serve, `npm run build`/`start` for prod, `npm run lint` for ESLint. Required env vars in `.env.local`: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
 

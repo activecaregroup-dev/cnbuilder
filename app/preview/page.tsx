@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FormSection, FormWidget, WidgetType } from '@/types/form';
 import { CARENOTES_BUTTON_CLASSES } from '@/lib/styles';
+import { getCurrentUser } from '@/lib/supabase';
 
 const PREVIEW_STORAGE_KEY = 'cnbuilder_preview';
 
@@ -23,9 +24,13 @@ export default function PreviewPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const auth = sessionStorage.getItem('cnbuilder_authenticated');
-    if (auth !== 'true') {
-      router.replace('/');
+    checkAuth();
+  }, [router]);
+
+  const checkAuth = async () => {
+    const user = await getCurrentUser();
+    if (!user) {
+      router.replace('/login');
       return;
     }
 
@@ -39,7 +44,7 @@ export default function PreviewPage() {
     } finally {
       setLoading(false);
     }
-  }, [router]);
+  };
 
   const hasSections = useMemo(() => payload?.sections && payload.sections.length > 0, [payload]);
 

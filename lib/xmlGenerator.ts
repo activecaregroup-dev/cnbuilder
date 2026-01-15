@@ -191,7 +191,10 @@ function generateFieldXML(widget: FormWidget, groupName?: string, colspanOverrid
   attrs.push(`colspan="${fieldColspan}"`); // Use the calculated colspan
   
   // Add mandatory if required (not for checkboxes)
-  if (widget.properties.required && widget.type !== WidgetType.CHECKBOX) {
+  // IMPORTANT: RadioButtonList fields MUST be mandatory in CareNotes
+  if (widget.type === WidgetType.RADIO_BUTTON_LIST) {
+    attrs.push(`mandatory="true"`);
+  } else if (widget.properties.required && widget.type !== WidgetType.CHECKBOX) {
     attrs.push(`mandatory="true"`);
   }
   

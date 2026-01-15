@@ -2,33 +2,37 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import PasswordProtect from '@/components/PasswordProtect';
-import { loadAllForms, deleteForm } from '@/lib/supabase';
-import { FileText, Plus, Trash2, FileDown, Edit } from 'lucide-react';
+import { loadAllForms, deleteForm, loadForm, getCurrentUser, signOut } from '@/lib/supabase';
+import { FileText, Plus, Trash2, FileDown, Edit, LogOut, User, BookOpen } from 'lucide-react';
 
 interface Form {
   id: string;
   name: string;
   description?: string;
   updated_at: string;
+  author_name?: string;
+  author_email?: string;
 }
 
 export default function FormsListPage() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState<any>(null);
   const [forms, setForms] = useState<Form[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    // Check authentication
-    const auth = sessionStorage.getItem('cnbuilder_authenticated');
-    if (auth === 'true') {
-      setIsAuthenticated(true);
-      loadForms();
-    } else {
-      setLoading(false);
-    }
+    checkAuth();
   }, []);
+
+  const checkAuth = async () => {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      router.replace('/login');
+    } else {
+      setUser(currentUser);
+      loadForms();
+    }
+  };
 
   const loadForms = async () => {
     setLoading(true);
@@ -64,16 +68,54 @@ export default function FormsListPage() {
     }
   };
 
-  const handleExportXML = (formId: string) => {
-    // TODO: Implement XML export
-    alert('XML export functionality coming soon!');
+  const handleExportXML = async (formId: string) => {
+    try {
+      const { data, error } = await loadForm(formId);
+      if (error || !data) {
+        alert('Error loading form: ' + (error?.message || 'Form not found'));
+        return;
+      }
+
+      const { generateCareNotesXML } = await import('@/lib/xmlGenerator');
+      const result = generateCareNotesXML({
+        formName: data.name,
+        replannable: data.replannable || false,
+        confirmable: data.confirmable || false,
+        sections: data.sections
+      });
+
+      // Create download
+      const blob = new Blob([result.xml], { type: 'application/xml' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${data.name}.fdl`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      // Show developer notes if any
+      if (result.developerNotes.length > 0) {
+        alert(`XML exported successfully!\n\nDeveloper Notes (${result.developerNotes.length}):\n${result.developerNotes.slice(0, 5).join('\n')}${result.developerNotes.length > 5 ? '\n...(see XML for full list)' : ''}`);
+      }
+    } catch (err) {
+      alert('Failed to export XML');
+      console.error(err);
+    }
   };
 
-  if (!isAuthenticated) {
-    return <PasswordProtect onUnlock={() => {
-      setIsAuthenticated(true);
-      loadForms();
-    }} />;
+  const handleSignOut = async () => {
+    await signOut();
+    router.push('/login');
+  };
+
+  if (loading || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <p className="text-gray-500">Loading...</p>
+      </div>
+    );
   }
 
   return (
@@ -97,14 +139,39 @@ export default function FormsListPage() {
               </div>
             </div>
 
-            {/* Right - New Form button and ACG logo */}
-            <div className="flex items-center gap-6">
+            {/* Right - User info and buttons */}
+            <div className="flex items-center gap-4">
+              {/* User info */}
+              <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg">
+                <User className="w-4 h-4 text-gray-600" />
+                <span className="text-sm font-medium text-gray-700">
+                  {user.user_metadata?.full_name || user.email}
+                </span>
+              </div>
+
+              <button 
+                onClick={() => router.push('/guide')}
+                className="flex items-center gap-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-6 py-3 rounded-lg font-semibold transition-colors"
+                title="User Guide"
+              >
+                <BookOpen className="w-5 h-5" />
+                Guide
+              </button>
+
               <button 
                 onClick={() => router.push('/builder')}
                 className="flex items-center gap-2 bg-[#F0941F] hover:bg-[#F0941F]/90 text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-sm"
               >
                 <Plus className="w-5 h-5" />
                 New Form
+              </button>
+
+              <button
+                onClick={handleSignOut}
+                className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors"
+                title="Sign out"
+              >
+                <LogOut className="w-5 h-5" />
               </button>
               
               <div className="hidden sm:block">
@@ -151,15 +218,26 @@ export default function FormsListPage() {
                     {form.description && (
                       <p className="text-sm text-gray-600 mb-2">{form.description}</p>
                     )}
-                    <p className="text-xs text-gray-400">
-                      Last updated: {new Date(form.updated_at).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </p>
+                    <div className="flex items-center gap-4 text-xs text-gray-400">
+                      <span>
+                        Last updated: {new Date(form.updated_at).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </span>
+                      {form.author_name && (
+                        <>
+                          <span className="text-gray-300">•</span>
+                          <span className="flex items-center gap-1">
+                            <User className="w-3 h-3" />
+                            {form.author_name}
+                          </span>
+                        </>
+                      )}
+                    </div>
                   </div>
                   
                   <div className="flex gap-2 ml-4">

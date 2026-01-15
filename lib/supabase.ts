@@ -6,6 +6,9 @@ interface Form {
   name: string;
   description?: string;
   sections: FormSection[];
+  created_by?: string;
+  author_email?: string;
+  author_name?: string;
 }
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -15,15 +18,27 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Save or update a form
 export async function saveForm(form: Form & { description?: string }) {
+  // Get current user
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  const formData: any = {
+    id: form.id,
+    name: form.name,
+    description: form.description || '',
+    widgets: form.sections, // save sections array to widgets column
+    updated_at: new Date().toISOString()
+  };
+  
+  // Add creator info only for new forms (when created_by is not set)
+  if (user && !form.created_by) {
+    formData.created_by = user.id;
+    formData.author_email = user.email;
+    formData.author_name = user.user_metadata?.full_name || user.email?.split('@')[0];
+  }
+  
   const { data, error } = await supabase
     .from('forms')
-    .upsert({
-      id: form.id,
-      name: form.name,
-      description: form.description || '',
-      widgets: form.sections, // save sections array to widgets column
-      updated_at: new Date().toISOString()
-    })
+    .upsert(formData)
     .select()
     .single();
   
@@ -54,10 +69,42 @@ export async function loadForm(id: string) {
 export async function loadAllForms() {
   const { data, error } = await supabase
     .from('forms')
-    .select('id, name, description, updated_at')
+    .select('id, name, description, updated_at, author_name, author_email')
     .order('updated_at', { ascending: false });
   
   return { data, error };
+}
+
+// Auth functions
+export async function signUp(email: string, password: string, fullName: string) {
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        full_name: fullName
+      }
+    }
+  });
+  return { data, error };
+}
+
+export async function signIn(email: string, password: string) {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password
+  });
+  return { data, error };
+}
+
+export async function signOut() {
+  const { error } = await supabase.auth.signOut();
+  return { error };
+}
+
+export async function getCurrentUser() {
+  const { data: { user } } = await supabase.auth.getUser();
+  return user;
 }
 
 // Delete a form
