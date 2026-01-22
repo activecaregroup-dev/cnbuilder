@@ -117,7 +117,7 @@ cnbuilder/
 ## Development Notes
 
 - Field names are auto-generated and limited to 30 characters
-- Widget options are limited to 30 characters each
+- Widget options are limited to 350 characters each
 - Forms are stored in Supabase with sections saved as JSONB in the `widgets` column
 - Authentication uses sessionStorage (expires on browser close)
 
