@@ -77,20 +77,12 @@ export default function PreviewPage() {
         <h1 className="text-xl font-semibold text-gray-900">
           {payload.formName || 'Form Preview'}
         </h1>
-        <div className="flex gap-2">
-          <button
-            onClick={() => router.back()}
-            className="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm hover:bg-gray-50"
-          >
-            Back
-          </button>
-          <button
-            onClick={() => router.push('/builder')}
-            className="px-4 py-2 bg-acg-teal text-white text-sm hover:bg-opacity-90"
-          >
-            Open in Builder
-          </button>
-        </div>
+        <button
+          onClick={() => router.back()}
+          className="px-4 py-2 bg-[#196774] text-white text-sm hover:bg-[#196774]/90 border border-[#196774]"
+        >
+          Back
+        </button>
       </div>
 
       {/* Thick dashed border separator */}
