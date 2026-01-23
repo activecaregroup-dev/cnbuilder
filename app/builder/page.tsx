@@ -36,6 +36,7 @@ function FormBuilderPageContent() {
   const [formName, setFormName] = useState("Untitled Form");
   const [currentFormId, setCurrentFormId] = useState<string | null>(formId);
   const [formSettings, setFormSettings] = useState({ replannable: false, confirmable: false });
+  const [tabName, setTabName] = useState("");
   const [sections, setSections] = useState<FormSection[]>([]);
   const [user, setUser] = useState<any>(null);
   
@@ -88,6 +89,30 @@ function FormBuilderPageContent() {
     }
     setUser(currentUser);
     setIsAuthenticated(true);
+
+    // Check if returning from preview with unsaved changes
+    try {
+      const savedState = localStorage.getItem(PREVIEW_STORAGE_KEY);
+      if (savedState) {
+        const payload = JSON.parse(savedState);
+        // Only restore if the formId matches (or both are null for new forms)
+        if (payload.currentFormId === formId) {
+          setFormName(payload.formName || 'Untitled Form');
+          setSections(payload.sections || []);
+          setFormSettings(payload.formSettings || { replannable: false, confirmable: false });
+          setTabName(payload.tabName || '');
+          setCurrentFormId(payload.currentFormId);
+          // Don't clear yet - keep it in case user navigates back to preview
+          return; // Skip loading from database
+        } else {
+          // Different form, clear the preview cache
+          localStorage.removeItem(PREVIEW_STORAGE_KEY);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to restore preview state:', err);
+      localStorage.removeItem(PREVIEW_STORAGE_KEY);
+    }
 
     // Load form if formId is provided
     if (formId) {
@@ -476,7 +501,8 @@ function FormBuilderPageContent() {
       formName,
       replannable: formSettings.replannable,
       confirmable: formSettings.confirmable,
-      sections
+      sections,
+      tabName
     });
     
     // Create a blob and download
@@ -499,6 +525,8 @@ function FormBuilderPageContent() {
       formName,
       sections,
       formSettings,
+      tabName,
+      currentFormId,
     };
 
     try {
@@ -530,6 +558,9 @@ function FormBuilderPageContent() {
     setSelectedWidgetId(null);
     setFormName('Untitled Form');
     setCurrentFormId(null);
+    setTabName('');
+    // Clear preview cache
+    localStorage.removeItem(PREVIEW_STORAGE_KEY);
     router.replace('/builder');
     console.log('Form reset complete');
   };
@@ -591,6 +622,19 @@ function FormBuilderPageContent() {
           className="text-xl font-bold border-b-2 border-gray-300 focus:border-blue-500 outline-none px-2 py-1 flex-1 max-w-md bg-transparent text-gray-900"
           placeholder="Form Name"
         />
+        
+        {/* Tab Input */}
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-semibold text-[#363432]" htmlFor="tab-input">Tab:</label>
+          <input
+            id="tab-input"
+            type="text"
+            value={tabName}
+            onChange={(e) => setTabName(e.target.value)}
+            className="border border-gray-300 rounded px-2 py-1 text-sm text-gray-900 bg-white focus:border-blue-500 focus:outline-none w-40"
+            placeholder="e.g., Assessments"
+          />
+        </div>
         
         {/* Replan and Confirmation Checkboxes */}
         <div className="flex items-center gap-6 px-6 py-2 border-l border-r border-gray-300 bg-[#196774]/5 rounded">

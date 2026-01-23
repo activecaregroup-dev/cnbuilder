@@ -5,6 +5,7 @@ interface XMLGeneratorOptions {
   replannable: boolean;
   confirmable: boolean;
   sections: FormSection[];
+  tabName?: string;
 }
 
 interface DeveloperNote {
@@ -617,6 +618,7 @@ function generateFormComment(): string {
 }
 
 export function generateCareNotesXML(options: XMLGeneratorOptions): { xml: string; notes: DeveloperNote[] } {
+  const { formName, sections, replannable, confirmable, tabName } = options;
   const developerNotes: DeveloperNote[] = [];
   const xmlParts: string[] = [];
   
@@ -663,10 +665,17 @@ export function generateCareNotesXML(options: XMLGeneratorOptions): { xml: strin
   xmlParts.push('</form>');
   
   // Add developer notes section as XML comments
-  if (developerNotes.length > 0) {
+  // Always add section if there are notes OR if tab name is specified
+  if (developerNotes.length > 0 || tabName) {
     xmlParts.push('\n<!-- ========================================= -->');
     xmlParts.push('<!-- DEVELOPER NOTES -->');
     xmlParts.push('<!-- ========================================= -->');
+    
+    // Add tab name if specified
+    if (tabName) {
+      xmlParts.push('\n<!-- TAB INFORMATION -->');
+      xmlParts.push(`<!-- This form should be placed in the "${tabName}" tab -->`);  
+    }
     
     // Group notes by type
     const warnings = developerNotes.filter(n => n.type === 'warning');
