@@ -35,7 +35,7 @@ function FormBuilderPageContent() {
   const [mounted, setMounted] = useState(false);
   const [formName, setFormName] = useState("Untitled Form");
   const [currentFormId, setCurrentFormId] = useState<string | null>(formId);
-  const [formSettings, setFormSettings] = useState({ replannable: false, confirmable: false });
+  const [formSettings, setFormSettings] = useState({ replannable: false, confirmable: false, isComplete: false });
   const [tabName, setTabName] = useState("");
   const [sections, setSections] = useState<FormSection[]>([]);
   const [user, setUser] = useState<any>(null);
@@ -99,7 +99,7 @@ function FormBuilderPageContent() {
         if (payload.currentFormId === formId) {
           setFormName(payload.formName || 'Untitled Form');
           setSections(payload.sections || []);
-          setFormSettings(payload.formSettings || { replannable: false, confirmable: false });
+          setFormSettings(payload.formSettings || { replannable: false, confirmable: false, isComplete: false });
           setTabName(payload.tabName || '');
           setCurrentFormId(payload.currentFormId);
           // Don't clear yet - keep it in case user navigates back to preview
@@ -131,6 +131,11 @@ function FormBuilderPageContent() {
         setFormName(data.name || 'Untitled Form');
         setSections(data.sections || []);
         setCurrentFormId(data.id);
+        setFormSettings({
+          replannable: data.replannable || false,
+          confirmable: data.confirmable || false,
+          isComplete: data.isComplete || false
+        });
       }
     } catch (err) {
       console.error('Failed to load form:', err);
@@ -473,7 +478,8 @@ function FormBuilderPageContent() {
         id: currentFormId || crypto.randomUUID(),
         name: formName,
         description: '',
-        sections: sections
+        sections: sections,
+        isComplete: formSettings.isComplete
       };
 
       const { data, error } = await saveForm(formData);
@@ -656,6 +662,15 @@ function FormBuilderPageContent() {
             />
             <span className="text-sm font-semibold text-[#363432] group-hover:text-[#196774] transition-colors">Confirmation</span>
           </label>
+          <label className="flex items-center gap-3 cursor-pointer group">
+            <input
+              type="checkbox"
+              checked={formSettings.isComplete}
+              onChange={(e) => setFormSettings({ ...formSettings, isComplete: e.target.checked })}
+              className="w-5 h-5 text-[#196774] border-gray-400 rounded focus:ring-2 focus:ring-[#196774]"
+            />
+            <span className="text-sm font-semibold text-[#363432] group-hover:text-[#196774] transition-colors">Complete</span>
+          </label>
         </div>
 
         {/* Spacer */}
@@ -666,34 +681,34 @@ function FormBuilderPageContent() {
           <button
             type="button"
             onClick={handleNewForm}
-            className="flex items-center gap-2 px-4 py-2 bg-[#F0941F] hover:bg-[#F0941F]/90 text-white rounded-md transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#F0941F] hover:bg-[#F0941F]/90 text-white rounded-md transition-colors text-sm"
           >
-            <FilePlus className="w-4 h-4" />
-            New Form
+            <FilePlus className="w-3.5 h-3.5" />
+            New
           </button>
           <button
             type="button"
             onClick={handleSaveForm}
             disabled={saving}
-            className="flex items-center gap-2 px-4 py-2 bg-[#196774] text-white rounded-md hover:bg-[#196774]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#196774] text-white rounded-md hover:bg-[#196774]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
           >
-            <Save className="w-4 h-4" />
-            {saving ? 'Saving...' : 'Save Form'}
+            <Save className="w-3.5 h-3.5" />
+            {saving ? 'Saving...' : 'Save'}
           </button>
           <button
             type="button"
             onClick={handlePreview}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors text-sm"
           >
             Preview
           </button>
           <button
             type="button"
             onClick={handleExportXML}
-            className="flex items-center gap-2 px-4 py-2 bg-[#90A19D] text-white rounded-md hover:bg-[#90A19D]/90 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#90A19D] text-white rounded-md hover:bg-[#90A19D]/90 transition-colors text-sm"
           >
-            <FileDown className="w-4 h-4" />
-            Export XML
+            <FileDown className="w-3.5 h-3.5" />
+            XML
           </button>
         </div>
       </div>

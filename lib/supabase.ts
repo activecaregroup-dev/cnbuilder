@@ -9,6 +9,7 @@ interface Form {
   created_by?: string;
   author_email?: string;
   author_name?: string;
+  isComplete?: boolean;
 }
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -26,7 +27,8 @@ export async function saveForm(form: Form & { description?: string }) {
     name: form.name,
     description: form.description || '',
     widgets: form.sections, // save sections array to widgets column
-    updated_at: new Date().toISOString()
+    updated_at: new Date().toISOString(),
+    is_complete: form.isComplete || false
   };
   
   // Add creator info only for new forms (when created_by is not set)
@@ -57,7 +59,8 @@ export async function loadForm(id: string) {
     return { 
       data: {
         ...data,
-        sections: data.widgets // map widgets column to sections property
+        sections: data.widgets, // map widgets column to sections property
+        isComplete: data.is_complete
       }, 
       error 
     };
@@ -69,7 +72,7 @@ export async function loadForm(id: string) {
 export async function loadAllForms() {
   const { data, error } = await supabase
     .from('forms')
-    .select('id, name, description, updated_at, author_name, author_email')
+    .select('id, name, description, updated_at, author_name, author_email, is_complete')
     .order('updated_at', { ascending: false });
   
   return { data, error };

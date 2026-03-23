@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { loadAllForms, deleteForm, loadForm, getCurrentUser, signOut } from '@/lib/supabase';
-import { FileText, Plus, Trash2, FileDown, Edit, LogOut, User, BookOpen } from 'lucide-react';
+import { FileText, Plus, Trash2, FileDown, Edit, LogOut, User, BookOpen, ArrowLeft } from 'lucide-react';
 
 interface Form {
   id: string;
@@ -15,7 +15,7 @@ interface Form {
   is_complete?: boolean;
 }
 
-export default function FormsListPage() {
+export default function ClosedCompleteFormsPage() {
   const [user, setUser] = useState<any>(null);
   const [forms, setForms] = useState<Form[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,8 +42,8 @@ export default function FormsListPage() {
       if (error) {
         console.error('Error loading forms:', error);
       } else {
-        // Filter to show only incomplete forms
-        setForms((data || []).filter(form => !form.is_complete));
+        // Filter to show only complete forms
+        setForms((data || []).filter(form => form.is_complete));
       }
     } catch (err) {
       console.error('Failed to load forms:', err);
@@ -185,12 +185,12 @@ export default function FormsListPage() {
             </button>
 
             <button 
-              onClick={() => router.push('/closed-complete')}
+              onClick={() => router.push('/')}
               className="flex items-center gap-1.5 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-3 py-1.5 rounded-lg transition-colors shadow-sm text-sm"
-              title="View Closed Complete Forms"
+              title="View Active Forms"
             >
-              <FileText className="w-3.5 h-3.5" />
-              Closed Complete
+              <ArrowLeft className="w-3.5 h-3.5" />
+              Active Forms
             </button>
 
             <button 
@@ -207,9 +207,10 @@ export default function FormsListPage() {
       {/* Forms List */}
       <div className="max-w-7xl mx-auto px-8 py-8">
         <div className="mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Active Forms</h2>
-          <p className="text-gray-600 mt-1">Forms currently in development</p>
+          <h2 className="text-2xl font-bold text-gray-900">Closed Complete Forms</h2>
+          <p className="text-gray-600 mt-1">Completed forms ready for use</p>
         </div>
+        
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <p className="text-gray-500">Loading forms...</p>
@@ -217,14 +218,14 @@ export default function FormsListPage() {
         ) : forms.length === 0 ? (
           <div className="bg-white rounded-lg border-2 border-dashed border-gray-300 p-12 text-center">
             <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No forms yet</h3>
-            <p className="text-gray-600 mb-6">Get started by creating your first form</p>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No completed forms yet</h3>
+            <p className="text-gray-600 mb-6">Forms marked as complete will appear here</p>
             <button 
-              onClick={() => router.push('/builder')}
+              onClick={() => router.push('/')}
               className="inline-flex items-center gap-2 bg-[#F0941F] hover:bg-[#F0941F]/90 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
             >
-              <Plus className="w-5 h-5" />
-              Create Your First Form
+              <ArrowLeft className="w-5 h-5" />
+              View Active Forms
             </button>
           </div>
         ) : (

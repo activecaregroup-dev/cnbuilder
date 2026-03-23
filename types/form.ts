@@ -45,4 +45,5 @@ export interface Form {
   sections: FormSection[];
   createdAt: Date;
   updatedAt: Date;
+  isComplete: boolean;
 }
