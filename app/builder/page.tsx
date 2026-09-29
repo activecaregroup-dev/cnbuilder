@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, MouseSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
-import { FormSection, FormRow, FormWidget, WidgetType } from '@/types/form';
+import { FormSection, FormWidget, WidgetType } from '@/types/form';
 import FormCanvas from '@/components/FormCanvas';
 import WidgetLibrary from '@/components/WidgetLibrary';
 import PropertiesPanel from '@/components/PropertiesPanel';
