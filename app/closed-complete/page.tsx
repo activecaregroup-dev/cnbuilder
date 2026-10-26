@@ -107,7 +107,8 @@ export default function ClosedCompleteFormsPage() {
         formName: data.name,
         replannable: data.replannable || false,
         confirmable: data.confirmable || false,
-        sections: data.sections
+        sections: data.sections,
+        tabName: data.tabName
       });
 
       // Create download

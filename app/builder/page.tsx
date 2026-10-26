@@ -136,6 +136,7 @@ function FormBuilderPageContent() {
           confirmable: data.confirmable || false,
           isComplete: data.isComplete || false
         });
+        setTabName(data.tabName || '');
       }
     } catch (err) {
       console.error('Failed to load form:', err);
@@ -479,20 +480,29 @@ function FormBuilderPageContent() {
         name: formName,
         description: '',
         sections: sections,
-        isComplete: formSettings.isComplete
+        isComplete: formSettings.isComplete,
+        replannable: formSettings.replannable,
+        confirmable: formSettings.confirmable,
+        tabName
       };
 
-      const { data, error } = await saveForm(formData);
-      
+      const { data, error, settingsNotSaved } = await saveForm(formData);
+
       if (error) {
         alert('Error saving form: ' + error.message);
       } else {
+        // The database now holds the latest version, so a stale preview copy must not override it on reload
+        localStorage.removeItem(PREVIEW_STORAGE_KEY);
         if (!currentFormId && data) {
           setCurrentFormId(data.id);
           // Update URL to include formId
           router.replace(`/builder?formId=${data.id}`);
         }
-        alert('Form saved successfully!');
+        if (settingsNotSaved) {
+          alert('Form saved, but Replan, Confirmation and Tab could not be saved because the database is missing their columns. Run the SQL in supabase/add_form_settings.sql in Supabase, then save again.');
+        } else {
+          alert('Form saved successfully!');
+        }
       }
     } catch (err) {
       console.error('Save error:', err);

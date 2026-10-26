@@ -10,6 +10,9 @@ interface Form {
   author_email?: string;
   author_name?: string;
   isComplete?: boolean;
+  replannable?: boolean;
+  confirmable?: boolean;
+  tabName?: string;
 }
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -28,23 +31,45 @@ export async function saveForm(form: Form & { description?: string }) {
     description: form.description || '',
     widgets: form.sections, // save sections array to widgets column
     updated_at: new Date().toISOString(),
-    is_complete: form.isComplete || false
+    is_complete: form.isComplete || false,
+    replannable: form.replannable || false,
+    confirmable: form.confirmable || false,
+    tab_name: form.tabName || ''
   };
-  
+
   // Add creator info only for new forms (when created_by is not set)
   if (user && !form.created_by) {
     formData.created_by = user.id;
     formData.author_email = user.email;
     formData.author_name = user.user_metadata?.full_name || user.email?.split('@')[0];
   }
-  
+
   const { data, error } = await supabase
     .from('forms')
     .upsert(formData)
     .select()
     .single();
-  
-  return { data, error };
+
+  // If the settings columns haven't been added to the database yet, still save the form itself
+  if (error && isMissingSettingsColumn(error)) {
+    const withoutSettings = { ...formData };
+    delete withoutSettings.replannable;
+    delete withoutSettings.confirmable;
+    delete withoutSettings.tab_name;
+    const retry = await supabase
+      .from('forms')
+      .upsert(withoutSettings)
+      .select()
+      .single();
+    return { data: retry.data, error: retry.error, settingsNotSaved: !retry.error };
+  }
+
+  return { data, error, settingsNotSaved: false };
+}
+
+// PostgREST reports an unknown column as PGRST204 ("Could not find the 'x' column")
+function isMissingSettingsColumn(error: { code?: string; message?: string }): boolean {
+  return error.code === 'PGRST204' && /replannable|confirmable|tab_name/.test(error.message || '');
 }
 
 // Load a single form by ID
@@ -60,8 +85,9 @@ export async function loadForm(id: string) {
       data: {
         ...data,
         sections: data.widgets, // map widgets column to sections property
-        isComplete: data.is_complete
-      }, 
+        isComplete: data.is_complete,
+        tabName: data.tab_name || ''
+      },
       error 
     };
   }
