@@ -574,6 +574,36 @@ export default function PropertiesPanel({
           </div>
         )}
 
+        {/* Show on Replan Checkbox - field values carry forward to the replanned copy unless unticked */}
+        {selectedWidget.type !== WidgetType.ACTION_BUTTON &&
+         selectedWidget.type !== WidgetType.INSTRUCTION_NOTE &&
+         selectedWidget.type !== WidgetType.LABEL && (
+          <div>
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="show-on-replan-checkbox"
+                checked={properties.showOnReplan !== false}
+                onChange={(e) => updateProperty('showOnReplan', e.target.checked)}
+                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+              />
+              <label htmlFor="show-on-replan-checkbox" className="text-sm font-medium text-gray-700">
+                Show on Replan
+              </label>
+            </div>
+            <p className="text-xs text-gray-500 mt-1 ml-6">
+              {properties.showOnReplan !== false
+                ? 'Value is carried forward to the replanned copy'
+                : 'Value is cleared on the replanned copy (excluded from Replan)'}
+            </p>
+            {properties.showOnReplan === false && selectedWidget.required && (
+              <p className="text-xs text-[#EF6024] mt-1 ml-6 font-medium">
+                ⚠ Required field - the replanned copy will need this re-entered before saving
+              </p>
+            )}
+          </div>
+        )}
+
         {/* Group Name for CHECKBOX widgets */}
         {selectedWidget.type === WidgetType.CHECKBOX && (
           <div>

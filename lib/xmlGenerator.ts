@@ -459,9 +459,20 @@ function generateReplanButtonXML(): string {
 </action>`;
 }
 
-function generateReplanFieldXML(formFieldNames: string[], confirmable: boolean): { xml: string; notes: DeveloperNote[] } {
+// Form fields the designer has opted out of Replan via "Show on Replan"
+function collectReplanExcludedWidgets(sections: FormSection[]): FormWidget[] {
+  return sections
+    .flatMap(section => section.rows)
+    .flatMap(row => row.widgets)
+    .filter(widget => ![WidgetType.INSTRUCTION_NOTE, WidgetType.ACTION_BUTTON, WidgetType.LABEL].includes(widget.type))
+    .filter(widget => widget.properties?.showOnReplan === false);
+}
+
+function generateReplanFieldXML(formFieldNames: string[], confirmable: boolean, excludedWidgets: FormWidget[]): { xml: string; notes: DeveloperNote[] } {
   const notes: DeveloperNote[] = [];
   const formFieldsLower = new Set(formFieldNames.map(name => name.toLowerCase()));
+  const excludedFieldNames = Array.from(new Set(excludedWidgets.map(getFieldName)));
+  const excludedLower = new Set(excludedFieldNames.map(name => name.toLowerCase()));
 
   // A real CompletedBy field on the form must carry forward and save normally
   const hasRealCompletedBy = formFieldsLower.has('completedby') || formFieldsLower.has('completedbyid');
@@ -494,14 +505,36 @@ function generateReplanFieldXML(formFieldNames: string[], confirmable: boolean):
       .join('\n');
   }).filter(Boolean);
 
+  if (excludedFieldNames.length > 0) {
+    groupXML.push([
+      '  <!-- Form fields with "Show on Replan" unticked: cleared on the replanned copy -->',
+      ...excludedFieldNames.map(name => `  <fieldattribute name="${escapeXML(name)}" value="ExcludeField" />`)
+    ].join('\n'));
+
+    notes.push({
+      type: 'info',
+      message: `Excluded from Replan by design ("Show on Replan" unticked): ${excludedFieldNames.join(', ')}`
+    });
+
+    const mandatoryExcluded = excludedWidgets.filter(isMandatory).map(getFieldName);
+    if (mandatoryExcluded.length > 0) {
+      notes.push({
+        type: 'warning',
+        message: `⚠️ Mandatory fields excluded from Replan (${mandatoryExcluded.join(', ')}) will be blank on the replanned copy and must be re-entered before it can be saved. Add nullable="true" if the Replan save itself fails.`
+      });
+    }
+  }
+
   const xml = `<field name="Replan" type="Replan">
 ${groupXML.join('\n\n')}
 </field>`;
 
-  if (keptFields.length > 0) {
+  // Fields the designer chose to exclude are not "kept", so don't warn about them
+  const keptNotExcluded = Array.from(new Set(keptFields)).filter(name => !excludedLower.has(name.toLowerCase()));
+  if (keptNotExcluded.length > 0) {
     notes.push({
       type: 'warning',
-      message: `⚠️ Not excluded from Replan because they are real form fields: ${Array.from(new Set(keptFields)).join(', ')}`
+      message: `⚠️ Not excluded from Replan because they are real form fields: ${keptNotExcluded.join(', ')}`
     });
   }
 
@@ -524,7 +557,9 @@ ${groupXML.join('\n\n')}
 
   notes.push({
     type: 'info',
-    message: 'Replan excludes metadata only (author, completion, confirmation and status fields). All clinical and user-entered fields carry forward.'
+    message: excludedFieldNames.length > 0
+      ? 'Replan excludes metadata (author, completion, confirmation and status fields) plus the form fields listed above. All other clinical and user-entered fields carry forward.'
+      : 'Replan excludes metadata only (author, completion, confirmation and status fields). All clinical and user-entered fields carry forward.'
   });
 
   return { xml, notes };
@@ -606,7 +641,7 @@ export function generateCareNotesXML(options: XMLGeneratorOptions): { xml: strin
   }
 
   if (replannable) {
-    const { xml, notes } = generateReplanFieldXML(collectFormFieldNames(sections), confirmable);
+    const { xml, notes } = generateReplanFieldXML(collectFormFieldNames(sections), confirmable, collectReplanExcludedWidgets(sections));
     xmlParts.push(xml);
     developerNotes.push(...notes);
   }
