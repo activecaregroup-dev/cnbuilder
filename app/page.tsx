@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { loadAllForms, deleteForm, loadForm, getCurrentUser, signOut } from '@/lib/supabase';
-import { FileText, Plus, Trash2, FileDown, Edit, LogOut, User, BookOpen } from 'lucide-react';
+import { loadAllForms, deleteForm, loadForm, duplicateForm, getCurrentUser, signOut } from '@/lib/supabase';
+import { FileText, Plus, Trash2, FileDown, Edit, Copy, LogOut, User, BookOpen } from 'lucide-react';
 
 interface Form {
   id: string;
@@ -66,6 +66,30 @@ export default function FormsListPage() {
       }
     } catch (err) {
       alert('Failed to delete form');
+      console.error(err);
+    }
+  };
+
+  const handleDuplicate = async (form: Form) => {
+    const newName = prompt('Name for the copied form:', `${form.name} (Copy)`);
+    if (newName === null) {
+      return;
+    }
+    if (!newName.trim()) {
+      alert('Form name cannot be empty');
+      return;
+    }
+
+    try {
+      const { data, error } = await duplicateForm(form.id, newName.trim());
+      if (error || !data) {
+        alert('Error duplicating form: ' + (error?.message || 'Unknown error'));
+        return;
+      }
+      // Open the copy straight away so it can be amended
+      router.push(`/builder?formId=${data.id}`);
+    } catch (err) {
+      alert('Failed to duplicate form');
       console.error(err);
     }
   };
@@ -270,6 +294,14 @@ export default function FormsListPage() {
                     >
                       <Edit className="w-4 h-4" />
                       Edit
+                    </button>
+                    <button 
+                      onClick={() => handleDuplicate(form)}
+                      className="flex items-center gap-2 bg-white border border-[#196774] text-[#196774] hover:bg-[#196774]/10 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                      title="Copy this form to create a new version"
+                    >
+                      <Copy className="w-4 h-4" />
+                      Duplicate
                     </button>
                     <button 
                       onClick={() => handleExportXML(form.id)}

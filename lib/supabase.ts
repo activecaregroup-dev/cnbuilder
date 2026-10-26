@@ -68,6 +68,60 @@ export async function loadForm(id: string) {
   return { data, error };
 }
 
+// Duplicate a form as a new, in-progress form so a variant can be built from it
+export async function duplicateForm(id: string, newName: string) {
+  const { data: source, error: loadError } = await supabase
+    .from('forms')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (loadError || !source) {
+    return { data: null, error: loadError || new Error('Form not found') };
+  }
+
+  const { data: { user } } = await supabase.auth.getUser();
+
+  // Give every section, row and widget a fresh id so the copy is fully independent.
+  // Field names are kept so the variant stays aligned with the original form.
+  const sections: FormSection[] = (source.widgets || []).map((section: FormSection) => ({
+    ...section,
+    id: crypto.randomUUID(),
+    rows: section.rows.map(row => ({
+      ...row,
+      id: crypto.randomUUID(),
+      widgets: row.widgets.map(widget => ({
+        ...widget,
+        id: crypto.randomUUID(),
+        properties: { ...widget.properties }
+      }))
+    }))
+  }));
+
+  // Copy every other column (e.g. description, settings) but reset identity, status and authorship
+  const formData: Record<string, unknown> = {
+    ...source,
+    id: crypto.randomUUID(),
+    name: newName,
+    widgets: sections,
+    is_complete: false,
+    updated_at: new Date().toISOString(),
+    created_by: user?.id ?? null,
+    author_email: user?.email ?? null,
+    author_name: user?.user_metadata?.full_name || user?.email?.split('@')[0] || null
+  };
+  // Let the database stamp the copy's own creation time
+  delete formData.created_at;
+
+  const { data, error } = await supabase
+    .from('forms')
+    .insert(formData)
+    .select()
+    .single();
+
+  return { data, error };
+}
+
 // Load all forms
 export async function loadAllForms() {
   const { data, error } = await supabase
