@@ -6,45 +6,27 @@ import { useRouter } from 'next/navigation';
 import { FormSection, FormWidget, WidgetType } from '@/types/form';
 import { CARENOTES_BUTTON_CLASSES } from '@/lib/styles';
 import { getCurrentUser } from '@/lib/supabase';
-
-const PREVIEW_STORAGE_KEY = 'cnbuilder_preview';
-
-interface PreviewPayload {
-  formName: string;
-  sections: FormSection[];
-  formSettings?: {
-    replannable?: boolean;
-    confirmable?: boolean;
-  };
-}
+import { readPreviewSnapshot, PreviewSnapshot } from '@/lib/previewCache';
 
 export default function PreviewPage() {
   const router = useRouter();
-  const [payload, setPayload] = useState<PreviewPayload | null>(null);
+  const [payload, setPayload] = useState<PreviewSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const checkAuth = async () => {
+      const user = await getCurrentUser();
+      if (!user) {
+        router.replace('/login');
+        return;
+      }
+
+      setPayload(readPreviewSnapshot());
+      setLoading(false);
+    };
+
     checkAuth();
   }, [router]);
-
-  const checkAuth = async () => {
-    const user = await getCurrentUser();
-    if (!user) {
-      router.replace('/login');
-      return;
-    }
-
-    try {
-      const raw = localStorage.getItem(PREVIEW_STORAGE_KEY);
-      if (raw) {
-        setPayload(JSON.parse(raw));
-      }
-    } catch (err) {
-      console.error('Failed to read preview data', err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const hasSections = useMemo(() => payload?.sections && payload.sections.length > 0, [payload]);
 

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { loadAllForms, deleteForm, loadForm, duplicateForm, getCurrentUser, signOut } from '@/lib/supabase';
+import { clearPreviewSnapshot } from '@/lib/previewCache';
 import { FileText, Plus, Trash2, FileDown, Edit, Copy, LogOut, User, BookOpen } from 'lucide-react';
 
 interface Form {
@@ -22,6 +23,8 @@ export default function FormsListPage() {
   const router = useRouter();
 
   useEffect(() => {
+    // Leaving the builder: drop any preview snapshot so reopening a form loads the saved version
+    clearPreviewSnapshot();
     checkAuth();
   }, []);
 

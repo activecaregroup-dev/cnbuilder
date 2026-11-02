@@ -8,8 +8,9 @@ import FormCanvas from '@/components/FormCanvas';
 import WidgetLibrary from '@/components/WidgetLibrary';
 import PropertiesPanel from '@/components/PropertiesPanel';
 import { Save, FileDown, FilePlus, ArrowLeft } from 'lucide-react';
-import { saveForm, loadForm, getCurrentUser } from '@/lib/supabase';
+import { saveForm, loadForm, getCurrentUser, getFormUpdatedAt } from '@/lib/supabase';
 import { generateCareNotesXML } from '@/lib/xmlGenerator';
+import { savePreviewSnapshot, readPreviewSnapshot, clearPreviewSnapshot } from '@/lib/previewCache';
 
 // Helper function to generate unique field names (max 30 chars)
 function generateFieldName(widgetType: WidgetType, label: string): string {
@@ -24,7 +25,10 @@ function generateFieldName(widgetType: WidgetType, label: string): string {
   return `${truncatedLabel}_${timestamp}_${random}`;
 }
 
-const PREVIEW_STORAGE_KEY = 'cnbuilder_preview';
+function sameTimestamp(a: string | null, b: string | null): boolean {
+  if (!a || !b) return a === b;
+  return new Date(a).getTime() === new Date(b).getTime();
+}
 
 function FormBuilderPageContent() {
   const router = useRouter();
@@ -38,6 +42,8 @@ function FormBuilderPageContent() {
   const [formSettings, setFormSettings] = useState({ replannable: false, confirmable: false, isComplete: false });
   const [tabName, setTabName] = useState("");
   const [sections, setSections] = useState<FormSection[]>([]);
+  // When the open form was last saved, as seen when it was loaded or last saved here
+  const [loadedUpdatedAt, setLoadedUpdatedAt] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
   
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
@@ -90,29 +96,19 @@ function FormBuilderPageContent() {
     setUser(currentUser);
     setIsAuthenticated(true);
 
-    // Check if returning from preview with unsaved changes
-    try {
-      const savedState = localStorage.getItem(PREVIEW_STORAGE_KEY);
-      if (savedState) {
-        const payload = JSON.parse(savedState);
-        // Only restore if the formId matches (or both are null for new forms)
-        if (payload.currentFormId === formId) {
-          setFormName(payload.formName || 'Untitled Form');
-          setSections(payload.sections || []);
-          setFormSettings(payload.formSettings || { replannable: false, confirmable: false, isComplete: false });
-          setTabName(payload.tabName || '');
-          setCurrentFormId(payload.currentFormId);
-          // Don't clear yet - keep it in case user navigates back to preview
-          return; // Skip loading from database
-        } else {
-          // Different form, clear the preview cache
-          localStorage.removeItem(PREVIEW_STORAGE_KEY);
-        }
-      }
-    } catch (err) {
-      console.error('Failed to restore preview state:', err);
-      localStorage.removeItem(PREVIEW_STORAGE_KEY);
+    // Returning from preview in this tab: restore the unsaved work instead of the saved copy.
+    // The snapshot is tab-only and cleared on the form lists, so it can't hide other users' saves.
+    const snapshot = readPreviewSnapshot();
+    if (snapshot && snapshot.currentFormId === formId) {
+      setFormName(snapshot.formName || 'Untitled Form');
+      setSections(snapshot.sections || []);
+      setFormSettings(snapshot.formSettings || { replannable: false, confirmable: false, isComplete: false });
+      setTabName(snapshot.tabName || '');
+      setCurrentFormId(snapshot.currentFormId);
+      setLoadedUpdatedAt(snapshot.baseUpdatedAt);
+      return;
     }
+    clearPreviewSnapshot();
 
     // Load form if formId is provided
     if (formId) {
@@ -137,6 +133,7 @@ function FormBuilderPageContent() {
           isComplete: data.isComplete || false
         });
         setTabName(data.tabName || '');
+        setLoadedUpdatedAt(data.updated_at ?? null);
       }
     } catch (err) {
       console.error('Failed to load form:', err);
@@ -475,6 +472,26 @@ function FormBuilderPageContent() {
   const handleSaveForm = async () => {
     setSaving(true);
     try {
+      // Don't silently overwrite changes another user saved after this form was opened
+      if (currentFormId) {
+        const { updatedAt } = await getFormUpdatedAt(currentFormId);
+        if (updatedAt && !sameTimestamp(updatedAt, loadedUpdatedAt)) {
+          const savedAt = new Date(updatedAt).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
+          const overwrite = confirm(
+            `Someone else saved this form at ${savedAt}, after you opened it.\n\n` +
+            `OK - save anyway and overwrite their changes\n` +
+            `Cancel - don't save`
+          );
+          if (!overwrite) {
+            if (confirm('Load their latest saved version now? Your unsaved changes here will be lost.')) {
+              clearPreviewSnapshot();
+              await loadExistingForm(currentFormId);
+            }
+            return;
+          }
+        }
+      }
+
       const formData = {
         id: currentFormId || crypto.randomUUID(),
         name: formName,
@@ -492,7 +509,8 @@ function FormBuilderPageContent() {
         alert('Error saving form: ' + error.message);
       } else {
         // The database now holds the latest version, so a stale preview copy must not override it on reload
-        localStorage.removeItem(PREVIEW_STORAGE_KEY);
+        clearPreviewSnapshot();
+        setLoadedUpdatedAt(data?.updated_at ?? null);
         if (!currentFormId && data) {
           setCurrentFormId(data.id);
           // Update URL to include formId
@@ -537,19 +555,14 @@ function FormBuilderPageContent() {
   };
 
   const handlePreview = () => {
-    const payload = {
+    savePreviewSnapshot({
       formName,
       sections,
       formSettings,
       tabName,
       currentFormId,
-    };
-
-    try {
-      localStorage.setItem(PREVIEW_STORAGE_KEY, JSON.stringify(payload));
-    } catch (err) {
-      console.error('Failed to store preview payload', err);
-    }
+      baseUpdatedAt: loadedUpdatedAt,
+    });
 
     router.push('/preview');
   };
@@ -575,8 +588,8 @@ function FormBuilderPageContent() {
     setFormName('Untitled Form');
     setCurrentFormId(null);
     setTabName('');
-    // Clear preview cache
-    localStorage.removeItem(PREVIEW_STORAGE_KEY);
+    setLoadedUpdatedAt(null);
+    clearPreviewSnapshot();
     router.replace('/builder');
     console.log('Form reset complete');
   };

@@ -94,6 +94,17 @@ export async function loadForm(id: string) {
   return { data, error };
 }
 
+// Fetch only when a form was last saved, to detect saves made by other users
+export async function getFormUpdatedAt(id: string) {
+  const { data, error } = await supabase
+    .from('forms')
+    .select('updated_at')
+    .eq('id', id)
+    .single();
+
+  return { updatedAt: (data?.updated_at as string | undefined) ?? null, error };
+}
+
 // Duplicate a form as a new, in-progress form so a variant can be built from it
 export async function duplicateForm(id: string, newName: string) {
   const { data: source, error: loadError } = await supabase
